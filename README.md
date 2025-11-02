@@ -183,8 +183,10 @@ Place your SSL key and certificate in the cert/ folder.
 
 Update config.js to point to your files for HTTPS support:
 
+```javascript
 SSL_KEY_PATH: './cert/key.pem',
 SSL_CERT_PATH: './cert/cert.pem'
+```
 
 ## ▶️ Running the Application
 
