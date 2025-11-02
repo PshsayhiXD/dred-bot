@@ -22,9 +22,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
   <img src="https://img.shields.io/badge/Discord.js-14.22+-blue?style=for-the-badge&logo=discord" alt="Discord.js">
 </p>
 
-dredbot is a comprehensive, open-source Discord bot built with Node.js, featuring a robust economy system, extensive command library, item management, clans, marketplace, gambling mechanics, and much more. It includes a full web dashboard for administration and user interaction, making it a complete Discord bot solution for communities.
+**dredbot** is a comprehensive, open-source Discord bot built with Node.js. It offers a robust economy system, extensive command library, item management, clans, marketplace, gambling mechanics, and more. Featuring a full web dashboard for administration and user interaction, it provides a complete Discord bot solution for gaming communities.
 
-The bot is designed to provide an engaging gaming experience with persistent economies, social features, and administrative tools. It supports multiple languages, regional timers, automated events, and integrates with external APIs for enhanced functionality.
+Inspired by the gameplay and community mechanics of [**drednot.io**](https://drednot.io), **dredbot** delivers an engaging experience with persistent economies, social systems, and administrative tools. It supports multiple languages, regional timers, automated events, and integrates with external APIs for enhanced functionality.
 
 ## ✨ Features
 
