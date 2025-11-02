@@ -67,9 +67,9 @@ await (async function () {
 
   const localIP = await helper.getLocalIP();
   const option = {
-    key: await helper.readText(paths.certs.key),
-    cert: await helper.readText(paths.certs.cert),
-    passphrase: 'Dredbotontop',
+    key: await helper.readText(config.SSL_KEY_PATH),
+    cert: await helper.readText(config.SSL_CERT_PATH),
+    passphrase: config.CERT_PASSPHRASE,
   };
   const bot = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],

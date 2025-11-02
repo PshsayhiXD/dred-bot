@@ -6,6 +6,7 @@
     "bot": "node bot.js",
     "validator": "node utils/validator.js",
     "start": "node localhost.js & node bot.js & node utils/validator.js",
+    "setup": "node utils/createFile.js",
     "dev": "nodemon localhost.js"
   },
   "dependencies": {

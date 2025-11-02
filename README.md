@@ -83,10 +83,13 @@ Inspired by the gameplay and community mechanics of [**drednot.io**](https://dre
 
 - **Nodemon**: Development auto-restart
 
+- Optional: **SSL key and certificate** (for HTTPS support in the web dashboard)
+
 ## 📋 Prerequisites
 
 - **Node.js** (version 16 or higher recommended) - [Download here](https://nodejs.org/)
 - **npm** (comes with Node.js)
+- **SSL key and certificate** (optional, required for HTTPS support in the web dashboard)  
 - **A Discord bot token** - Obtain from [Discord Developer Portal](https://discord.com/developers/applications)
 - **CORS Anywhere** or similar proxy for API integrations (if fetching from external services to localhost)
 
@@ -105,7 +108,13 @@ cd dredbot
 npm install
 ```
 
-This will install all the required dependencies listed in the Technologies section.
+This will install all the required dependencies listed.
+
+And
+```bash
+npm run setup
+```
+To Setup files and database.
 
 ### 3. Configure the Bot
 
@@ -167,6 +176,15 @@ Since the bot integrates with external APIs (like drednot.io), you'll need to ha
 #### Option B: Use a different proxy service
 
 You can use online CORS proxies or set up your own reverse proxy.
+
+#### Option C: Use HTTPS with SSL key and certificate
+
+Place your SSL key and certificate in the cert/ folder.
+
+Update config.js to point to your files for HTTPS support:
+
+SSL_KEY_PATH: './cert/key.pem',
+SSL_CERT_PATH: './cert/cert.pem'
 
 ## ▶️ Running the Application
 
