@@ -1,10 +1,23 @@
+dredbot © 2025 Pshsayhi
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 # dredbot
 
 <p align="center">
   <img src="https://img.shields.io/github/stars/PshsayhiXD/dredbot?style=for-the-badge" alt="GitHub stars">
   <img src="https://img.shields.io/github/forks/PshsayhiXD/dredbot?style=for-the-badge" alt="GitHub forks">
   <img src="https://img.shields.io/github/issues/PshsayhiXD/dredbot?style=for-the-badge" alt="GitHub issues">
-  <img src="https://img.shields.io/github/license/PshsayhiXD/dredbot?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/Node.js-16+-green?style=for-the-badge&logo=node.js" alt="Node.js">
   <img src="https://img.shields.io/badge/Discord.js-14.22+-blue?style=for-the-badge&logo=discord" alt="Discord.js">
 </p>
@@ -125,7 +138,6 @@ RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key_here
 ```
 
 Make sure to set all the variables.
-
 
 ### 4. Set Up CORS Proxy (Optinal)
 
@@ -329,16 +341,7 @@ We welcome contributions from the community! This is an open-source project and 
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-### MIT License Summary
-
-- ✅ **Commercial Use**: You can use this project for commercial purposes
-- ✅ **Modification**: You can modify the code
-- ✅ **Distribution**: You can distribute the code
-- ✅ **Private Use**: You can use privately
-- ⚠️ **Liability**: No liability for damages
-- ⚠️ **Warranty**: No warranty provided
+This project is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
