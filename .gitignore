@@ -6,3 +6,5 @@ certs/
 .env
 database/
 command-prompt/
+config.js
+misc/

@@ -20,7 +20,7 @@ const config = {
   WSS_PORT: 3002,
   LOCALHOST_PORT: 3000,
   SSL_KEY_PATH: './certs/key.pem',
-  SSL_CERT_PATH: '/certs/cert.pem',
+  SSL_CERT_PATH: './certs/cert.pem',
   CERT_PASSPHRASE: 'DREDBOTONTOP',
   PREFIX: 'd?',
   CURRENCY_SYMBOL: "⚡",
