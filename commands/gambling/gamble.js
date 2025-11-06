@@ -38,7 +38,7 @@ export default {
       { m: 0, text: async () => `**Lost everything**.. **\`${await dep.formatAmount(bet)}${dep.config.CURRENCY_SYMBOL}\`**..`, color: '#FF0000' },
     ];
     const weights = [0.001, 0.004, 0.015, 0.03, 0.15, 0.3, 0.25, 0.25];
-    const r = dep.randomNumber();
+    const r = await dep.randomNumber();
     let acc = 0,
       chosen = outcomes[outcomes.length - 1];
     for (let i = 0; i < outcomes.length; i++) {
@@ -57,11 +57,11 @@ export default {
       message,
     });
     const msg = await message.reply({ embeds: [embed] });
-    let steps = Math.floor(dep.randomNumber() * 6) + 5;
+    let steps = Math.floor(await dep.randomNumber() * 6) + 5;
     let c = 0;
     const animate = async () => {
       if (c < steps) {
-        const fake = outcomes[Math.floor(dep.randomNumber() * outcomes.length)];
+        const fake = outcomes[Math.floor(await dep.randomNumber() * outcomes.length)];
         const embed = await dep.commandEmbed({
           title: `${dep.config.PREFIX}${command} ${bet}`,
           description: `🎲 **Rolling...**\n` + (typeof fake.text === 'function' ? (fake.m === 0 ? fake.text() : fake.text(Math.floor(bet * fake.m))) : ''),

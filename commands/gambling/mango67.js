@@ -46,8 +46,8 @@ export default {
       { m: 2.75, text: "🌌 DIVINE mango!!" },
     ];
     const weights = [0.4, 0.3, 0.2, 0.08, 0.02];
-    const roll = () => {
-      let r = dep.randomNumber();
+    const roll = async () => {
+      let r = await dep.randomNumber();
       let sum = 0;
       for (let i = 0; i < outcomes.length; i++) {
         sum += weights[i];
@@ -55,7 +55,7 @@ export default {
       }
       return outcomes[0];
     };
-    const o = roll();
+    const o = await roll();
     let amt = Math.floor(bet * o.m);
     let newBalance = (await dep.loadData(user)).balance.dredcoin;
     if (amt > 0) {

@@ -47,9 +47,9 @@ export default {
       [7,4],[7,3],[7,2],
     ];
     const rows = 8, cols = 8;
-    const shuffle = arr => {
+    const shuffle = async (arr) => {
       for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(dep.randomNumber() * (i + 1));
+        const j = Math.floor(await dep.randomNumber() * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
       }
       return arr;
@@ -58,7 +58,7 @@ export default {
     for (const p of prizes) {
       for (let i = 0; i < p.count; i++) prizeList.push(p);
     }
-    shuffle(prizeList);
+    await shuffle(prizeList);
     const buildGrid = (list) => {
       const grid = Array.from({ length: rows }, () => Array(cols).fill("⬛"));
       grid[0][3] = "🔻";
@@ -68,10 +68,10 @@ export default {
       });
       return grid.map(r => r.join("")).join("\n");
     };
-    const targetPrize = prizeList[Math.floor(dep.randomNumber() * prizeList.length)];
+    const targetPrize = prizeList[Math.floor(await dep.randomNumber() * prizeList.length)];
     const targetIndex = prizeList.findIndex(p => p.name === targetPrize.name);
     const stopOffset = (targetIndex - 1 + path.length) % path.length;
-    const totalSteps = stopOffset + Math.floor(dep.randomNumber() * 8) + 3;
+    const totalSteps = stopOffset + Math.floor(await dep.randomNumber() * 8) + 3;
     let currentStep = 0;
     const embed = await dep.commandEmbed({
       title: `${dep.config.PREFIX}${command} ${bet}`,

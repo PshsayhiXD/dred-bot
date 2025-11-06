@@ -40,7 +40,7 @@ export default {
     await dep.saveData(user, data);
     await dep.removeDredcoin(user, bet);
     let guessed = false;
-    const diceRoll = Math.floor(dep.randomNumber() * 6) + 1;
+    const diceRoll = Math.floor(await dep.randomNumber() * 6) + 1;
     const buttons = Array.from({ length: 6 }, (_, i) => {
       const guess = i + 1;
       return {

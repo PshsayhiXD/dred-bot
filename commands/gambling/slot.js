@@ -31,9 +31,9 @@ export default {
     await dep.removeDredcoin(user, bet);
     const emojis = ["🍒","🍋","🍊","🍇","💎","⭐","🍀"];
     const result = [
-      emojis[Math.floor(dep.randomNumber() * emojis.length)],
-      emojis[Math.floor(dep.randomNumber() * emojis.length)],
-      emojis[Math.floor(dep.randomNumber() * emojis.length)]
+      emojis[Math.floor(await dep.randomNumber() * emojis.length)],
+      emojis[Math.floor(await dep.randomNumber() * emojis.length)],
+      emojis[Math.floor(await dep.randomNumber() * emojis.length)]
     ];
     const reels = ["❓","❓","❓"];
     const embed = await dep.commandEmbed({

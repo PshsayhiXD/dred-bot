@@ -53,7 +53,7 @@ export default {
     const historyBonus = data.onlyupHistory.count * 0.075;
     let fallChance = Math.min(baseChance + historyBonus, 0.5);
     const scale = Math.max(0.5, 1 - data.onlyupHistory.count * 0.1); 
-    const growth = 0.25 + dep.randomNumber() * 0.5;
+    const growth = 0.25 + await dep.randomNumber() * 0.5;
     const multiplierGrowth = growth * scale;
     const makeEmbed = async (end = false, win = false, amt = 0, res = "") => {
       return dep.commandEmbed({
@@ -79,14 +79,14 @@ export default {
         style: 1,
         customId: `${command}_climb_${user}`,
         emoji: "⬆",
-        onClick: async i => {
+        onClick: async (i) => {
           if (i.user.id !== message.author.id) return;
           if (ended) return;
           step++;
           multiplier += multiplierGrowth;
           baseChance = 0.15 + step * 0.075;
           fallChance = Math.min(baseChance + historyBonus, 0.5); // recalc per step
-          if (dep.randomNumber() < fallChance) { 
+          if (await dep.randomNumber() < fallChance) { 
             ended = true;
             await dep.gambleStreak(user, false);
             const e = await makeEmbed(true, false, 0, "💥 You fell! Lost everything...");

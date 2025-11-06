@@ -44,8 +44,8 @@ export default {
     const valueRank = v => (typeof v === 'number' ? v : { J: 11, Q: 12, K: 13, A: 14 }[v]);
     const deck = [];
     for (const s of suits) for (const v of values) deck.push({ s, v });
-    const draw = () => deck.splice(Math.floor(dep.randomNumber() * deck.length), 1)[0];
-    let current = draw();
+    const draw = async () => deck.splice(Math.floor(await dep.randomNumber() * deck.length), 1)[0];
+    let current = await draw();
     let pot = bet;
     let playing = true;
     const makeEmbed = async (end = false, res = null, newBalance = 0, streak = 0) => {
@@ -92,7 +92,7 @@ export default {
           emoji: '⬆️',
           onClick: async i => {
             if (i.user.id !== message.author.id) return;
-            const next = draw();
+            const next = await draw();
             const cVal = valueRank(current.v), nVal = valueRank(next.v);
             if (nVal > cVal) {
               pot *= 1.25;
@@ -112,7 +112,7 @@ export default {
           emoji: '⬇️',
           onClick: async i => {
             if (i.user.id !== message.author.id) return;
-            const next = draw();
+            const next = await draw();
             const cVal = valueRank(current.v), nVal = valueRank(next.v);
             if (nVal < cVal) {
               pot *= 1.25;

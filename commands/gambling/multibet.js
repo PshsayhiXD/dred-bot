@@ -49,7 +49,7 @@ export default {
       {m:3, w:0.009},
       {m:5, w:0.001}
     ];
-    const rollMultiplier = (last=false) => {
+    const rollMultiplier = async (last=false) => {
       const table = last ? 
         [
           {m:0, w:0.4},
@@ -62,14 +62,14 @@ export default {
           {m:5, w:0.001}
         ]
       : multipliers;
-      let r = dep.randomNumber(), acc = 0;
+      let r = await dep.randomNumber(), acc = 0;
       for (const x of table) {
         acc += x.w;
         if (r <= acc) return x.m;
       }
       return 0;
     };
-    let currentMult = rollMultiplier();
+    let currentMult = await rollMultiplier();
     let rollsLeft = 2;
     const makeEmbed = async (end = false, res = null, amt = 0, newBalance = 0, streak = 0) => {
       return dep.commandEmbed({
@@ -103,11 +103,11 @@ export default {
         style: 1,
         customId: `${command}_reroll_${user}`,
         emoji: '🎲',
-        onClick: async i => {
+        onClick: async (i) => {
           if (i.user.id !== message.author.id) return;
           if (rollsLeft <= 0) return finish('force', i);
           rollsLeft--;
-          currentMult = rollMultiplier(rollsLeft === 0);
+          currentMult = await rollMultiplier(rollsLeft === 0);
           const e = await makeEmbed();
           await i.update({ embeds: [e] });
         },

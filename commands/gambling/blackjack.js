@@ -43,7 +43,7 @@ export default {
     const suits = ['♠', '♥', '♦', '♣'];
     const values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'];
     for (const s of suits) for (const v of values) deck.push({ s, v });
-    const draw = () => deck.splice(Math.floor(dep.randomNumber() * deck.length), 1)[0];
+    const draw = async () => deck.splice(Math.floor(await dep.randomNumber() * deck.length), 1)[0];
     const score = hand => {
       let total = 0;
       let aces = 0;

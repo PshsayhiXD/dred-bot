@@ -24,7 +24,7 @@ export default {
         });
         return { embeds: [embed] };
       }
-      const amount = Math.floor(dep.randomNumber(dep.config.BEG_MIN, dep.config.BEG_MAX));
+      const amount = Math.floor(await dep.randomNumber(dep.config.BEG_MIN, dep.config.BEG_MAX));
       const embed = await dep.commandEmbed({
         title: `${dep.config.PREFIX}${command}`,
         description: `You begged and received **\`${await dep.formatAmount(amount)}${dep.config.CURRENCY_SYMBOL}\`**!`,

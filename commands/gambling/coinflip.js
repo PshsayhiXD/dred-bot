@@ -30,7 +30,7 @@ export default {
       return await dep.scheduleDelete(reply.client, reply.channel.id, reply.id);
     }
     await dep.removeDredcoin(user, bet);
-    const flip = dep.randomNumber() < 0.5 ? "heads" : "tails";
+    const flip = await dep.randomNumber() < 0.5 ? "heads" : "tails";
     let res = "", win = false, amt = 0, newBalance = 0;
     if (flip === choice) {
       win = true;

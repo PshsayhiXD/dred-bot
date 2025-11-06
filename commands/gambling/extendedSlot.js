@@ -30,8 +30,8 @@ export default {
     const { streak } = await dep.getGambleStreak(user);
     await dep.removeDredcoin(user, bet);
     const emojis = ["🍒","🍋","🍊","🍇","💎","⭐","🍀","7️⃣","🍉","🥭","🍎","🍏"];
-    const spin = () => emojis[Math.floor(dep.randomNumber() * emojis.length)];
-    let reels = [spin(), spin(), spin(), spin(), spin(), spin()];
+    const spin = async () => emojis[Math.floor(await dep.randomNumber() * emojis.length)];
+    let reels = [await spin(), await spin(), await spin(), await spin(), await spin(), await spin()];
     let outcome = { m: 0, text: "", color: "#FF0000" };
     const count = {};
     reels.forEach(e => (count[e] = (count[e] || 0) + 1));
