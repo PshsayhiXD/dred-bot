@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,22 +8,218 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <style>
-    body{background:#f0f2f5;font-family:"Segoe UI",sans-serif;overflow-y:auto;}
-    .soft-card{border-radius:1rem;box-shadow:0 6px 18px rgba(0,0,0,.08);background:white;transition:all .25s ease;opacity:0;transform:translateY(20px);}
-    .soft-card.show{opacity:1;transform:translateY(0);}
-    .soft-card:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(0,0,0,.12);}
-    .soft-btn{border-radius:1rem;box-shadow:0 4px 8px rgba(0,0,0,.08);transition:all .25s ease;}
-    .soft-btn:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.12);}
-    .soft-badge{border-radius:1rem;padding:.4em .8em;font-weight:500;}
-    .soft-input{border-radius:.75rem;transition:border .2s;}
-    .soft-input:focus{border-color:#6c63ff;box-shadow:0 0 0 .25rem rgba(108,99,255,.25);}
-    .g-4>.col,.g-4>[class*="col-"]{padding:1rem;}
-    .table-responsive{overflow-x:auto;}
+    body {
+      background: #f0f2f5;
+      font-family: "Segoe UI", sans-serif;
+      overflow-y: auto;
+    }
+
+    .soft-card {
+      position: relative;
+      z-index: 0;
+    }
+
+    .soft-card.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .soft-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .12);
+    }
+
+    .soft-btn {
+      border-radius: 1rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, .08);
+      transition: all .25s ease;
+    }
+
+    .soft-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+    }
+
+    .soft-badge {
+      border-radius: 1rem;
+      padding: .4em .8em;
+      font-weight: 500;
+    }
+
+    .soft-input {
+      border-radius: .75rem;
+      transition: border .2s;
+    }
+
+    .soft-input:focus {
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 .25rem rgba(108, 99, 255, .25);
+    }
+
+    .g-4>.col,
+    .g-4>[class*="col-"] {
+      padding: 1rem;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
   </style>
 </head>
+
 <body>
   <div id="dashboard" class="container-fluid py-4"></div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="component.js"></script>
+  <script>
+    // ---------------- Init ---------------
+    window.addEventListener('load', () => {
+      animate('.soft-card');
+      animate('.langMenu');
+      loadLanguage('en');
+      const dash = document.getElementById('dashboard');
+      const dashHeader = header('Dredbot Admin Dashboard');
+      dash.appendChild(dashHeader);
+
+      const hamburgerBtn = el('button', 'btn btn-light btn-sm', '☰');
+      hamburgerBtn.type = 'button';
+      hamburgerBtn.style.fontSize = '18px';
+      hamburgerBtn.style.padding = '4px 8px';
+      hamburgerBtn.style.cursor = 'pointer';
+      const langMenu = dropdown(
+        [
+          { label: 'EN', onClick: () => (hamburgerBtn.textContent = '☰') },
+          { label: 'FR', onClick: () => (hamburgerBtn.textContent = '☰') },
+          { label: 'ES', onClick: () => (hamburgerBtn.textContent = '☰') },
+        ],
+        hamburgerBtn,
+        'dropdown-menu show langMenu'
+      );
+      langMenu.style.display = 'none';
+      langMenu.style.position = 'absolute';
+      langMenu.style.minWidth = '80px';
+      langMenu.style.zIndex = '2';
+      document.body.appendChild(langMenu);
+      hamburgerBtn.onclick = e => {
+        animate('#langMenu');
+        e.stopPropagation();
+        if (langMenu.style.display === 'none') {
+          const rect = hamburgerBtn.getBoundingClientRect();
+          langMenu.style.top = rect.bottom + 'px';
+          langMenu.style.left = rect.left + 'px';
+          langMenu.style.display = 'block';
+          hamburgerBtn.textContent = '⇩';
+        } else {
+          hamburgerBtn.textContent = '☰';
+          langMenu.style.display = 'none';
+        }
+      };
+      const langWrapper = el('div', 'ms-auto');
+
+      const bar = topBar(true);
+      bar.addItem(el('span', 'fw-bold text-primary', 'Dredbot'));
+      bar.addItem(button('Dashboard', 'primary'));
+      document.body.prepend(bar);
+
+      langWrapper.appendChild(hamburgerBtn);
+      dashHeader.appendChild(langWrapper);
+      document.addEventListener('click', () => {
+        langMenu.style.display = 'none';
+        hamburgerBtn.textContent = '☰';
+      });
+      dash.appendChild(
+        sidebarNav([
+          {
+            label: 'Overview',
+            content: async () => {
+              try {
+                const res = await fetch('/get-profile', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ formatNumber: true }),
+                });
+                const data = await res.json();
+                console.log(data.profile);
+                if (!data.success) return el('div', 'text-danger', 'Failed to load profile.');
+                const profile = data.profile;
+                return row(
+                  fieldCardCollapsibleSections('User Profile', [
+                    [
+                      'Account',
+                      [
+                        [
+                          'General',
+                          [
+                            ['Username', addCopyIcon(profile.username)],
+                            ['User ID', addCopyIcon(profile.userId || 'N/A')],
+                            ['Banned', pillText(profile.banned ? 'Yes' : 'No', profile.banned ? 'danger' : 'success')],
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'Statistics',
+                      [
+                        [
+                          'Usage',
+                          [
+                            ['Dredcoin Balance', addCopyIcon(profile.balance)],
+                            ['Commands Executed', profile.command_execute || 0],
+                            ['Daily Streak', `${profile.dailyStreak} (next: ${profile.next_streaks.daily}, expire: ${profile.expire_streaks.daily})`],
+                            ['Weekly Streak', `${profile.weeklyStreak} (next: ${profile.next_streaks.weekly}, expire: ${profile.expire_streaks.weekly})`],
+                            ['Monthly Streak', `${profile.monthlyStreak} (next: ${profile.next_streaks.monthly}, expire: ${profile.expire_streaks.monthly})`],
+                            ['Yearly Streak', `${profile.yearlyStreak} (next: ${profile.next_streaks.yearly}, expire: ${profile.expire_streaks.yearly})`],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ]),
+                  ...(profile.inventory && Object.keys(profile.inventory).length >= 1
+                    ? [
+                      fieldCardCollapsibleSections(
+                        'Inventory',
+                        Object.entries(profile.inventory).map(([key, item]) => [
+                          item.name || key,
+                          [
+                            [
+                              'Details',
+                              [
+                                ['Name', item.name || '—'],
+                                ['Description', item.description || '—'],
+                                ['Rarity', item.rarity ? pillText(item.rarity, getRarityStyle(item.rarity).color) : '—'],
+                                ['Enchanted', pillText(item.enchanted ? 'Yes' : 'No', item.enchanted ? 'success' : 'secondary')],
+                                ['Enchants', Array.isArray(item.enchants) && item.enchants.length ? pillText(item.enchants.map(e => e.name || '—').join(', '), getRarityStyle(item.enchants[0].rarity).color) : pillText('—', 'secondary')],
+                                ['Icon', item.icon ? item.icon : '—'],
+                              ],
+                            ],
+                          ],
+                        ])
+                      ),
+                    ]
+                    : [])
+                );
+              } catch (error) {
+                return el('div', 'text-danger', 'Failed to load profile: ' + error.message);
+              }
+            },
+          },
+          {
+            label: 'Users',
+            content: () => {
+              const cols = ['ID', 'Name', 'Role'];
+              const data = [
+                [1, 'Alice', 'Admin'],
+                [2, 'Bob', 'User'],
+                [3, 'Charlie', 'Editor'],
+              ];
+              return tableWithPagination('User List', cols, data, 5);
+            },
+          },
+        ])
+      );
+    });
+  </script>
 </body>
+
 </html>

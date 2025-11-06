@@ -1,194 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dredbot Login</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dredbot — Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <style>
-    .grecaptcha-badge {
-      display: none
-    }
-    body {
-      background: radial-gradient(circle at top left, #9ec5fe, #a1c4fd, #b0d0ff);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: "Inter", system-ui, sans-serif;
-    }
-    .card {
-      width: 100%;
-      max-width: 420px;
-      border-radius: 1rem;
-      background: #ffffffdd;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15)
-    }
-    .card h4 {
-      font-weight: 600;
-      color: #0d6efd
-    }
-    .form-control {
-      border-radius: .5rem
-    }
-    .btn-primary {
-      background: linear-gradient(45deg, #0d6efd, #4a90e2);
-      border: none;
-      font-weight: 500;
-      transition: transform .15s ease, box-shadow .15s ease
-    }
-    .btn-primary:hover {
-      background: linear-gradient(45deg, #4a90e2, #0d6efd);
-      transform: translateY(-1px);
-      box-shadow: 0 3px 10px rgba(13, 110, 253, .4)
-    }
-    .btn-discord {
-      background: #5865f2;
-      color: #fff;
-      transition: transform .15s ease, box-shadow .15s ease
-    }
-    .btn-discord:hover {
-      background: #4752c4;
-      color: #fff;
-      transform: translateY(-1px);
-      box-shadow: 0 3px 10px rgba(88, 101, 242, .4)
-    }
-    .divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      color: #666;
-      font-weight: 500;
-      margin: 1rem 0
-    }
-    .divider::before,
-    .divider::after {
-      content: "";
-      flex: 1;
-      border-bottom: 1px solid #ccc
-    }
-    .divider:not(:empty)::before {
-      margin-right: .75em
-    }
-    .divider:not(:empty)::after {
-      margin-left: .75em
-    }
-    #errorMessage {
-      display: none;
-      font-weight: 500
-    }
-    footer {
-      font-size: .8rem;
-      color: #555;
-      text-align: center;
-      margin-top: 1rem
-    }
+    body {background:#f8f9fb;font-family:"Segoe UI",sans-serif;overflow-x:hidden;}
+    .hero{background:linear-gradient(135deg,#6c63ff 0%,#5b5fdd 50%,#4b52b7 100%);color:#fff;text-align:center;padding:7rem 1rem 6rem;}
+    .hero h1{font-size:3.2rem;font-weight:700;}
+    .hero p{font-size:1.2rem;opacity:.9;max-width:640px;margin:1rem auto 2.5rem;}
+    .features{padding:5rem 1rem;}
+    .cta{text-align:center;padding:5rem 1rem;background:#fff;}
+    footer{background:#fff;text-align:center;padding:1rem;border-top:1px solid #dee2e6;font-size:.95rem;color:#6c757d;}
   </style>
 </head>
 <body>
-  <div class="card shadow-lg p-4">
-    <h4 class="text-center mb-4">Sign in to your Dredbot account</h4>
-    <div id="errorMessage" class="alert alert-danger"></div>
-    <form id="loginForm">
-      <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" id="username" class="form-control" placeholder="Enter username" required />
-      </div>
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" id="password" class="form-control" placeholder="Enter password" required />
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="/forgot-password" class="small">Forgot Password?</a>
-      </div>
-      <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="agreeTerms" />
-        <label class="form-check-label" for="agreeTerms">
-          I agree to the <a href="/terms" target="_blank">Terms</a> and
-          <a href="/privacy" target="_blank">Privacy Policy</a>
-        </label>
-      </div>
-      <button class="g-recaptcha btn btn-primary w-100" id="loginBtn"
-        data-sitekey="6LeSaNArAAAAAFx5LkplvlfeY9UHo8Opgig5Mnx7" data-callback="onLogin" data-action="login" disabled>
-        <span id="loginText">Login</span>
-        <span id="loginSpinner" class="spinner-border spinner-border-sm ms-2" style="display:none;"></span>
-      </button>
-      <div class="divider">OR</div>
-      <div class="d-flex justify-content-center">
-        <a href="https://discord.com/oauth2/authorize?client_id=1342359906510049291&response_type=code&redirect_uri=https%3A%2F%2Fintent-horribly-killdeer.ngrok-free.app%2Fdiscord-auth&scope=identify"
-          class="btn btn-discord d-flex align-items-center justify-content-center px-4 py-2 w-80">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="me-2" viewBox="0 -28.5 256 256">
-            <path
-              d="M216.856339,16.5966031 C200.285002,8.84328665 182.566144,3.2084988 164.041564,0 C161.766523,4.11318106 159.108624,9.64549908 157.276099,14.0464379 C137.583995,11.0849896 118.072967,11.0849896 98.7430163,14.0464379 C96.9108417,9.64549908 94.1925838,4.11318106 91.8971895,0 C73.3526068,3.2084988 55.6133949,8.86399117 39.0420583,16.6376612 C5.61752293,67.146514 -3.4433191,116.400813 1.08711069,164.955721 C23.2560196,181.510915 44.7403634,191.567697 65.8621325,198.148576 C71.0772151,190.971126 75.7283628,183.341335 79.7352139,175.300261 C72.104019,172.400575 64.7949724,168.822202 57.8887866,164.667963 C59.7209612,163.310589 61.5131304,161.891452 63.2445898,160.431257 C105.36741,180.133187 151.134928,180.133187 192.754523,160.431257 C194.506336,161.891452 196.298154,163.310589 198.110326,164.667963 C191.183787,168.842556 183.854737,172.420929 176.223542,175.320965 C180.230393,183.341335 184.861538,190.991831 190.096624,198.16893 C211.238746,191.588051 232.743023,181.531619 254.911949,164.955721 C260.227747,108.668201 245.831087,59.8662432 216.856339,16.5966031 Z"
-              fill="#fff" fill-rule="nonzero"></path>
-          </svg>
-          Continue with Discord
-        </a>
-      </div>
-    </form>
-    <div class="text-center mt-3">
-      <button id="toggleAuthBtn" type="button"
-        style="background:none;border:none;padding:0;color:#0d6efd;cursor:pointer;text-decoration:none;">
-        No account? Sign up
-      </button>
-    </div>
-    <footer class="mt-3">© 2025 Dredbot. All rights reserved.</footer>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <div id="home"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="component.js"></script>
   <script>
-    const showError = msg => { const d = document.getElementById("errorMessage"); d.textContent = msg; d.style.display = "block" };
-    const hideError = () => document.getElementById("errorMessage").style.display = "none";
-    const setLoading = l => {
-      const b = document.getElementById("loginBtn"), t = document.getElementById("loginText"), s = document.getElementById("loginSpinner");
-      if (l) { b.disabled = true; t.textContent = "Processing..."; s.style.display = "inline-block" }
-      else { b.disabled = !document.getElementById("agreeTerms").checked; t.textContent = isLogin ? "Login" : "Sign Up"; s.style.display = "none" }
-    };
-    document.getElementById("agreeTerms").addEventListener("change", e => {
-      document.getElementById("loginBtn").disabled = !e.target.checked;
-    });
-    window.onLogin = async token => {
-      hideError();
-      const u = document.getElementById("username").value.trim();
-      const p = document.getElementById("password").value;
-      if (!u || !p) return showError("Please enter both username and password.");
-      setLoading(true);
+    window.addEventListener("load", async () => {
+      let user = null;
       try {
-        const res = await fetch(form.action, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: u, password: p, token, discordId: null }) });
-        if (!res.ok) throw new Error("Request failed.");
-        const html = await res.text(); document.open(); document.write(html); document.close();
-      } catch (err) { showError(err.message) } finally { setLoading(false) }
-    };
-    (async function run(t) {
-      const r = await fetch("/auto-login", { method: "POST", credentials: "include" }); if (!r.ok) return;
-      const c = r.headers.get("content-type") || "", x = await r.text(), h = c.includes("text/html") || /^<!doctype html>/i.test(x) || /<html/i.test(x);
-      if (!h) return; if (x.trim() === document.documentElement.outerHTML.trim()) return;
-      try { document.open(); document.write(x); document.close() } catch (e) { if (!t) return run(true) }
-    })();
-    const btn = document.getElementById("toggleAuthBtn");
-    const title = document.querySelector(".card h4");
-    const form = document.getElementById("loginForm");
-    let isLogin = true;
-    btn.addEventListener("mouseover", () => btn.style.textDecoration = "underline");
-    btn.addEventListener("mouseout", () => btn.style.textDecoration = "none");
-    btn.addEventListener("click", () => {
-      isLogin = !isLogin;
-      if (isLogin) {
-        title.textContent = "Sign in to your Dredbot account";
-        btn.textContent = "No account? Sign up";
-        form.action = "/login";
-        history.pushState({}, "", "/login");
-        document.getElementById("loginText").textContent = "Login";
-      } else {
-        title.textContent = "Create your Dredbot account";
-        btn.textContent = "Already have an account? Login";
-        form.action = "/signup";
-        history.pushState({}, "", "/signup");
-        document.getElementById("loginText").textContent = "Sign Up";
+        const res = await fetch("/get-profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"
+        });
+        const data = await res.json();
+        if (data.success && data.profile) user = data.profile;
+      } catch(e) {
+        console.warn("Profile check failed:", e);
       }
+
+      const root = document.getElementById("home");
+      const bar = topBar(true, "bg-white shadow-sm justify-content-between");
+      const brand = el("span", "fw-bold text-primary fs-3 me-3", "Dredbot");
+      brand.style.cursor = "pointer";
+      brand.onclick = async () => {
+        try {
+          const res = await fetch("/redirect/homepage", { credentials: "include" });
+          const html = await res.text();
+          document.open();
+          document.write(html);
+          document.close();
+        } catch (e) {
+          alert("Failed to redirect: " + e.message);
+        }
+      };
+      bar.addItem(brand);
+
+      const navWrap = el("div");
+      if (user) {
+        navWrap.appendChild(button("Open Dashboard", "primary", { onclick: "autoLoginRedirect()" }));
+        navWrap.appendChild(button("Logout", "outline-danger", { onclick: "fetch('/logout',{method:'POST',credentials:'include'}).then(()=>location.reload())" }));
+      } else navWrap.appendChild(button("Login / Signup", "outline-primary", { onclick: "location.href='loginsignup.html'" }));
+      bar.addItem(navWrap);
+      document.body.prepend(bar);
+
+      const hero = el("section","hero");
+      hero.appendChild(el("h1","","Automate. Analyze. Accelerate."));
+      hero.appendChild(el("p","","Dredbot empowers developers and teams to automate workflows, gain insights, and control systems effortlessly."));
+      const btnWrap = el("div");
+      if (user) btnWrap.appendChild(button("Open Dashboard","light",{onclick:"autoLoginRedirect()"}));
+      else btnWrap.appendChild(button("Get Started","light",{onclick:"location.href='loginsignup.html'"}));
+      btnWrap.appendChild(button("Learn More","outline-light",{onclick:"alert('Docs coming soon')"}));
+      hero.appendChild(btnWrap);
+
+      const features = el("section","features container");
+      const fRow = row(
+        col("col-md-4",card(
+          el("div","d-flex align-items-center mb-3",'<i class="bi bi-lightning-charge text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Automation</span>'),
+          el("div","","Streamline tasks with precision, flexibility, and power. Execute commands instantly or on schedule.")
+        )),
+        col("col-md-4",card(
+          el("div","d-flex align-items-center mb-3",'<i class="bi bi-bar-chart-line text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Analytics</span>'),
+          el("div","","Track performance, usage trends, and user behavior through an elegant, data-driven interface.")
+        )),
+        col("col-md-4",card(
+          el("div","d-flex align-items-center mb-3",'<i class="bi bi-boxes text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Integrations</span>'),
+          el("div","","Connect seamlessly with tools, APIs, and services to extend Dredbot’s automation capabilities.")
+        ))
+      );
+      features.appendChild(fRow);
+
+      const cta = el("section","cta");
+      cta.appendChild(el("h2","fw-bold mb-3","Ready to explore Dredbot?"));
+      cta.appendChild(el("p","text-muted mb-4","Join thousands of users automating their workflows today."));
+      const ctaBtns = el("div");
+      if (user) {
+        ctaBtns.appendChild(button("Open Dashboard","primary",{onclick:"autoLoginRedirect()"}));
+        ctaBtns.appendChild(button("Logout","outline-danger",{onclick:"fetch('/logout',{method:'POST',credentials:'include'}).then(()=>location.reload())"}));
+      } else {
+        ctaBtns.appendChild(button("Sign Up Free","primary",{onclick:"location.href='loginsignup.html'"}));
+        ctaBtns.appendChild(button("Learn More","outline-primary",{onclick:"alert('More info soon')"}));
+      }
+      cta.appendChild(ctaBtns);
+
+      const footer = el("footer","",`© ${new Date().getFullYear()} Dredbot. All rights reserved.`);
+
+      root.appendChild(hero);
+      root.appendChild(features);
+      root.appendChild(cta);
+      root.appendChild(footer);
+
+      animate(".soft-card");
     });
+
+    const autoLoginRedirect = async () => {
+      try {
+        const r = await fetch("/auto-login", { method: "POST", credentials: "include" });
+        if (!r.ok) throw new Error("Login check failed");
+        const txt = await r.text();
+        document.open(); document.write(txt); document.close();
+      } catch (e) {
+        alert("Failed to open dashboard: " + e.message);
+      }
+    };
   </script>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>

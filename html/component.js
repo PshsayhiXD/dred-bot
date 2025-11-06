@@ -15,7 +15,7 @@ const loadLanguage = async (lang = 'en') => {
 
 // t(key:string) → string
 // ex: t("Welcome")
-const t = (key) => translations[key] || key;
+const t = key => translations[key] || key;
 
 // refreshTranslations() → void
 // ex: refreshTranslations()
@@ -26,27 +26,24 @@ const refreshTranslations = () => {
   });
 };
 
-
-
-
 // ---------------- Colorize -------------------
 
 // colorFactory(val:string, opts?:{animated?:boolean,speed?:number,direction?:string}) → CSSStyleDeclaration
 // // ex: colorFactory("linear-gradient(...)", {animated:true,speed:5})
-const colorFactory = (val, { animated = false, speed = 3, direction = "to right" } = {}) => {
-  if (!val) return { color: "#6c757d" };
+const colorFactory = (val, { animated = false, speed = 3, direction = 'to right' } = {}) => {
+  if (!val) return { color: '#6c757d' };
   if (/gradient/i.test(val)) {
     const style = {
       backgroundImage: val,
-      color: "transparent",
-      backgroundClip: "text",
-      WebkitBackgroundClip: "text",
-      backgroundSize: "200% 200%"
+      color: 'transparent',
+      backgroundClip: 'text',
+      WebkitBackgroundClip: 'text',
+      backgroundSize: '200% 200%',
     };
     if (animated) {
-      const id = `grad-${speed}-${direction.replace(/\s+/g,"")}`;
+      const id = `grad-${speed}-${direction.replace(/\s+/g, '')}`;
       if (!document.getElementById(id)) {
-        const st = document.createElement("style");
+        const st = document.createElement('style');
         st.id = id;
         st.textContent = `
           @keyframes ${id} {
@@ -66,14 +63,14 @@ const colorFactory = (val, { animated = false, speed = 3, direction = "to right"
 // getRarityStyle(rarity:string, opts?:object) → CSSStyleDeclaration
 // ex: getRarityStyle("Epic",{animated:true})
 const raritiesColor = {
-  common: "#6c757d",
-  uncommon: "#198754",
-  rare: "#0d6efd",
-  epic: "#6610f2",
-  legendary: "#d4af37",
-  mythic: "#dc3545",
-  secret: "linear-gradient(90deg, #684c4c, #ffffff)",
-  transcendent: "linear-gradient(90deg, #09ff00, #005704)"
+  common: '#6c757d',
+  uncommon: '#198754',
+  rare: '#0d6efd',
+  epic: '#6610f2',
+  legendary: '#d4af37',
+  mythic: '#dc3545',
+  secret: 'linear-gradient(90deg, #684c4c, #ffffff)',
+  transcendent: 'linear-gradient(90deg, #09ff00, #005704)',
 };
 const getRarityStyle = (rarity, opts = {}) => {
   const key = rarity?.toLowerCase().trim();
@@ -82,15 +79,19 @@ const getRarityStyle = (rarity, opts = {}) => {
 
 // animationColor(name:string, speed:number, content:string) → string
 // ex: animationColor("rainbow",3,"0%{...}")
-const animationColor = (name, speed = 3, content = `
+const animationColor = (
+  name,
+  speed = 3,
+  content = `
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
-`) => {
-  const hash = btoa(content).slice(0,6);
+`
+) => {
+  const hash = btoa(content).slice(0, 6);
   const id = `anim-${name}-${speed}-${hash}`;
   if (!document.getElementById(id)) {
-    const st = document.createElement("style");
+    const st = document.createElement('style');
     st.id = id;
     st.textContent = `@keyframes ${id} { ${content} }`;
     document.head.appendChild(st);
@@ -101,37 +102,38 @@ const animationColor = (name, speed = 3, content = `
 // colorNode(text:string, color:string, opts?:{animated?:boolean,speed?:number,animationContent?:string}) → HTMLSpanElement
 // ex: colorNode("Epic Item","linear-gradient(...)",{animated:true})
 const colorNode = (text, color, { animated = false, speed = 3, animationContent } = {}) => {
-  const span = el("span", "", text);
+  const span = el('span', '', text);
   if (!color) {
-    span.style.color = "#6c757d";
+    span.style.color = '#6c757d';
     return span;
   }
   if (/gradient/i.test(color)) {
     span.style.backgroundImage = color;
-    span.style.color = "transparent";
-    span.style.backgroundClip = "text";
-    span.style.WebkitBackgroundClip = "text";
-    span.style.backgroundSize = "200% 200%";
+    span.style.color = 'transparent';
+    span.style.backgroundClip = 'text';
+    span.style.WebkitBackgroundClip = 'text';
+    span.style.backgroundSize = '200% 200%';
     if (animated) {
-      const id = animationColor("grad", speed, animationContent || `
+      const id = animationColor(
+        'grad',
+        speed,
+        animationContent ||
+          `
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
-      `);
+      `
+      );
       span.style.animation = `${id} ${speed}s linear infinite`;
     }
   } else span.style.color = color;
   return span;
 };
 
-
-
 // ---------------- Helper Functions -----------------
 // isFalsy(value:any) → boolean
 // ex: isFalsy(false)
-const isFalsy = (value) => !value;
-
-
+const isFalsy = value => !value;
 
 // ---------------- Factory Functions ----------------
 
@@ -163,74 +165,86 @@ const col = (w, child) => {
 
 // inputField(label: string, type?: string, placeholder?: string, onChange?: (val:string)=>void) → HTMLElement
 // ex: inputField("Username", "text", "Enter username", val=>console.log(val))
-const inputField = (label, type = "text", placeholder = "", onChange) => {
-  const wrap = el("div", "mb-3");
+const inputField = (label, type = 'text', placeholder = '', onChange) => {
+  const wrap = el('div', 'mb-3');
   if (label) {
-    const l = el("label", "form-label", t(label));
-    l.setAttribute("data-i18n", label);
+    const l = el('label', 'form-label', t(label));
+    l.setAttribute('data-i18n', label);
     wrap.appendChild(l);
   }
-  const input = el("input", "form-control");
+  const input = el('input', 'form-control');
   input.type = type;
   input.placeholder = placeholder;
-  input.addEventListener("input", e => onChange?.(e.target.value));
+  input.addEventListener('input', e => onChange?.(e.target.value));
   wrap.appendChild(input);
   return wrap;
 };
 
 // inputHere(target: HTMLElement, placeholder?: string, onSubmit?: (val:string)=>void, style?: object) → void
 // ex: inputHere(btn, "Type new value", val => console.log(val), { minWidth: "120px", color: "red" })
-const inputHere = (target, placeholder = "", onSubmit, style = {}) => {
+const inputHere = (target, placeholder = '', onSubmit, style = {}) => {
   target.onclick = e => {
-    const input = el("input", "form-control form-control-sm");
-    input.type = "text";
+    const input = el('input', 'form-control form-control-sm');
+    input.type = 'text';
     input.placeholder = placeholder;
-    input.value = target.textContent || "";
+    input.value = target.textContent || '';
 
-    Object.assign(input.style, { minWidth: "100px", ...style });
+    Object.assign(input.style, { minWidth: '100px', ...style });
 
     const finish = () => {
       onSubmit?.(input.value);
-      target.style.display = "";
+      target.style.display = '';
       input.remove();
     };
 
-    input.addEventListener("blur", finish);
-    input.addEventListener("keydown", evt => {
-      if (evt.key === "Enter") finish();
-      if (evt.key === "Escape") {
+    input.addEventListener('blur', finish);
+    input.addEventListener('keydown', evt => {
+      if (evt.key === 'Enter') finish();
+      if (evt.key === 'Escape') {
         input.value = target.textContent;
         finish();
       }
     });
 
-    target.style.display = "none";
+    target.style.display = 'none';
     target.parentNode.insertBefore(input, target);
     input.focus();
   };
 };
 
+// makeClickable(el:HTMLElement, onClick:()=>void, cursor?:string) → HTMLElement
+// ex: makeClickable(span,"()=>alert('clicked!')")
+const makeClickable = (element, onClick, cursor = 'pointer') => {
+  if (!(element instanceof HTMLElement)) return element;
+  element.style.cursor = cursor;
+  element.addEventListener('click', e => {
+    e.preventDefault();
+    onClick?.(e);
+  });
+  return element;
+};
+
 // card(title:string|Node, body:string|Node, footer?:string|Node) → HTMLDivElement
 // ex: card("Title", el("div","","Body"))
 const card = (title, bodyNode, footerNode = null) => {
-  const c = el("div", "card soft-card p-3 h-100 d-flex flex-column");
+  const c = el('div', 'card soft-card p-3 h-100 d-flex flex-column');
   if (title) {
-    const h = el("h5", "card-title mb-3");
+    const h = el('h5', 'card-title mb-3');
     if (title instanceof Node) h.appendChild(title);
     else {
       h.textContent = title;
-      h.setAttribute("data-i18n", title);
+      h.setAttribute('data-i18n', title);
     }
     c.appendChild(h);
   }
   if (bodyNode) {
-    const b = el("div", "card-body flex-grow-1");
+    const b = el('div', 'card-body flex-grow-1');
     if (bodyNode instanceof Node) b.appendChild(bodyNode);
     else b.innerHTML = bodyNode;
     c.appendChild(b);
   }
   if (footerNode) {
-    const f = el("div", "card-footer text-center");
+    const f = el('div', 'card-footer text-center');
     if (footerNode instanceof Node) f.appendChild(footerNode);
     else f.innerHTML = footerNode;
     c.appendChild(f);
@@ -278,18 +292,22 @@ const alert = (msg, type = 'info', timeout = 3000) => {
 
 // dropdown(items: (string|Node|{label:string,onClick?:()=>void})[], classes?: string, style?: object) → HTMLElement
 // ex: dropdown(["One", el("span","text-danger","HTML"), {label:"Edit", onClick:()=>{}}])
-const dropdown = (items = [], trigger = null, classes = "dropdown-menu show", style = {}) => {
-  const menu = el("ul", classes);
-  menu.style.display = "none";
+const dropdown = (items = [], trigger = null, classes = 'dropdown-menu show', style = {}) => {
+  const menu = el('ul', classes);
+  menu.style.display = 'none';
   Object.assign(menu.style, style);
   items.forEach(item => {
-    const li = el("li");
+    const li = el('li');
     let content;
-    if (typeof item === "string") content = el("span", "dropdown-item", t(item));
+    if (typeof item === 'string') content = el('span', 'dropdown-item', t(item));
     else if (item instanceof Node) content = item;
-    else if (item && typeof item.label === "string") {
-      content = el("span", "dropdown-item", t(item.label));
-      if (typeof item.onClick === "function") content.onclick = (e) => { e.preventDefault(); item.onClick(e); };
+    else if (item && typeof item.label === 'string') {
+      content = el('span', 'dropdown-item', t(item.label));
+      if (typeof item.onClick === 'function')
+        content.onclick = e => {
+          e.preventDefault();
+          item.onClick(e);
+        };
     } else return;
     li.appendChild(content);
     menu.appendChild(li);
@@ -297,22 +315,22 @@ const dropdown = (items = [], trigger = null, classes = "dropdown-menu show", st
   if (trigger) {
     const updatePosition = () => {
       const rect = trigger.getBoundingClientRect();
-      menu.style.top = rect.bottom + window.scrollY + "px";
-      menu.style.left = rect.left + window.scrollX + "px";
+      menu.style.top = rect.bottom + window.scrollY + 'px';
+      menu.style.left = rect.left + window.scrollX + 'px';
     };
     trigger.onclick = e => {
       e.stopPropagation();
-      if (menu.style.display === "none") {
+      if (menu.style.display === 'none') {
         updatePosition();
-        menu.style.display = "block";
-      } else {
-        menu.style.display = "none";
-      }
+        menu.style.display = 'block';
+      } else menu.style.display = 'none';
     };
-    window.addEventListener("resize", () => {
-      if (menu.style.display !== "none") updatePosition();
+    window.addEventListener('resize', () => {
+      if (menu.style.display !== 'none') updatePosition();
     });
-    document.addEventListener("click", () => { menu.style.display = "none"; });
+    document.addEventListener('click', () => {
+      menu.style.display = 'none';
+    });
     document.body.appendChild(menu);
   }
   return menu;
@@ -329,22 +347,22 @@ const button = (label, type = 'primary', attrs = {}) => {
 
 // dropdownButton(label: string, items: (string|Node|{label:string,onClick?:()=>void})[], type?: string, style?: object, classes?: string) → HTMLElement
 // ex: dropdownButton("Actions", ["Edit",{label:"Delete",onClick:()=>{}}])
-const dropdownButton = (label, items = [], type = "primary", style = {}, classes = "btn btn-primary dropdown-toggle") => {
-  const wrapper = el("div", "dropdown d-inline-block");
-  const btn = el("button", classes, t(label));
-  btn.setAttribute("type", "button");
-  btn.setAttribute("data-bs-toggle", "dropdown");
-  btn.setAttribute("aria-expanded", "false");
+const dropdownButton = (label, items = [], type = 'primary', style = {}, classes = 'btn btn-primary dropdown-toggle') => {
+  const wrapper = el('div', 'dropdown d-inline-block');
+  const btn = el('button', classes, t(label));
+  btn.setAttribute('type', 'button');
+  btn.setAttribute('data-bs-toggle', 'dropdown');
+  btn.setAttribute('aria-expanded', 'false');
   Object.assign(btn.style, style);
   wrapper.appendChild(btn);
-  const menu = dropdown(items, "dropdown-menu");
+  const menu = dropdown(items, 'dropdown-menu');
   wrapper.appendChild(menu);
   return wrapper;
 };
 
 // header(title:string) → HTMLElement
 // ex: header("Dredbot dashboard")
-const header = (title) => {
+const header = title => {
   const h = el('nav', 'navbar navbar-light bg-white px-3 mb-4 shadow-sm soft-card');
   const s = el('span', 'navbar-brand mb-0 h1', t(title));
   s.setAttribute('data-i18n', title);
@@ -354,15 +372,14 @@ const header = (title) => {
 
 // headerButton(header: HTMLElement, text: string, onClick: () => void, style?: object, classes?: string) → HTMLElement
 // ex: headerButton(nav, "Settings", () => alert("Settings clicked!"), { marginLeft: "10px" }, "btn btn-success")
-const headerButton = (header, text, onClick, style = {}, classes = "btn btn-primary btn-sm") => {
-  const btn = el("button", classes, t(text));
-  btn.setAttribute("type", "button");
-  btn.addEventListener("click", onClick);
+const headerButton = (header, text, onClick, style = {}, classes = 'btn btn-primary btn-sm') => {
+  const btn = el('button', classes, t(text));
+  btn.setAttribute('type', 'button');
+  btn.addEventListener('click', onClick);
   Object.assign(btn.style, style);
   header.appendChild(btn);
   return btn;
 };
-
 
 // toolbar(...controls:Node[]) → HTMLDivElement
 // ex: toolbar(button("Save","success"))
@@ -548,14 +565,14 @@ const tableWithPaginationAndButtons = (title, cols, data, pageSize = 3, buttons 
 
 // pillText(text:string, color:string) → HTMLSpanElement
 // ex: pillText("Active","success")
-const pillText = (text, color = "primary") => {
-  const cls = "px-3 py-1 rounded-pill fw-semibold me-2";
-  const p = el("span", cls, t(text));
-  p.setAttribute("data-i18n", text);
-  if (/^(primary|secondary|success|danger|warning|info|light|dark)$/.test(color)) p.classList.add(`bg-${color}`, "text-white");
+const pillText = (text, color = 'primary') => {
+  const cls = 'px-3 py-1 rounded-pill fw-semibold me-2';
+  const p = el('span', cls, t(text));
+  p.setAttribute('data-i18n', text);
+  if (/^(primary|secondary|success|danger|warning|info|light|dark)$/.test(color)) p.classList.add(`bg-${color}`, 'text-white');
   else {
     p.style.background = color;
-    p.style.color = "#fff";
+    p.style.color = '#fff';
   }
   return p;
 };
@@ -587,36 +604,71 @@ const styleText = (text, { rules = [], color = null, weight = null, italic = fal
   return span;
 };
 
-// sidebarNav(items: {label: string, content: () => Node | Promise<Node>, onHover?: (link: HTMLAnchorElement) => void, onLeave?: (link: HTMLAnchorElement) => void}[]): HTMLDivElement
-// ex: sidebarNav([{label:"Home",content:()=>el("div","","Home"),onHover:()=>console.log("hover"),onLeave:()=>console.log("leave")}])
-const sidebarNav = (items) => {
+// sidebarNav(items: {label:string,content:()=>Node|Promise<Node>,onClick?:(link:HTMLElement,idx:number)=>void,onHover?:(link:HTMLElement,idx:number)=>void,onLeave?:(link:HTMLElement,idx:number)=>void,onSelect?:(link:HTMLElement,idx:number)=>void}[], opts?:{activeCls?:string,hoverCls?:string,baseCls?:string,style?:object})
+// ex: sidebarNav([{label:"Home",content:()=>el("div","","Home"),onClick:(link,i)=>console.log("click",i),onSelect:(link,i)=>console.log("select",i)}],{activeCls:"bg-primary text-white"})
+const sidebarNav = (items, opts = {}) => {
+  const { activeCls = "bg-primary text-white", hoverCls = "bg-light", baseCls = "text-dark", style = {} } = opts;
   const wrap = el("div", "d-flex align-items-stretch");
-  const side = el("div", "d-flex flex-column p-3 bg-white soft-card me-3");
-  const content = el("div", "flex-grow-1 position-relative");
-  wrap.style.minHeight = "100vh";
-  side.style.width = "220px";
+  const side = el("div", "d-flex flex-column p-3 bg-white soft-card me-3 border-end");
+  const content = el("div", "flex-grow-1 position-relative overflow-auto");
+  wrap.style.height = "100vh";
+  side.style.width = style.width || "240px";
+  side.style.flexShrink = "0";
+  content.style.overflowY = "auto";
+  const header = el("div", "fw-bold fs-5 text-center mb-4 text-primary", t("Menu"));
+  header.setAttribute("data-i18n", "Menu");
+  side.appendChild(header);
   const tabs = [];
   items.forEach((it, i) => {
-    const tab = el("div", "tab-pane");
+    const tab = el("div", "tab-pane h-100");
     tab.style.display = i === 0 ? "block" : "none";
-    const c = it.content();
-    if (c instanceof Promise) c.then(node => node && tab.appendChild(node));
-    else if (c) tab.appendChild(c);
-    tabs.push(tab);
-    content.appendChild(tab);
-    const link = el("a", "nav-link mb-2 fw-semibold", t(it.label));
+    tab.style.visibility = i === 0 ? "visible" : "hidden";
+    const link = el("a", `nav-link fw-bold d-block py-3 rounded-pill text-center ${baseCls}`, t(it.label));
     link.setAttribute("data-i18n", it.label);
     link.href = "#";
-    if (i === 0) link.classList.add("active");
+    if (i === 0) link.classList.add(...activeCls.split(" "));
+    Object.assign(link.style, {
+      fontSize: "1.1rem",
+      marginBottom: "8px",
+      letterSpacing: "0.3px",
+      transition: "all 0.15s ease",
+      ...style.link,
+    });
+    const c = it.content();
+    if (c instanceof Promise) {
+      c.then(node => {
+        if (node) {
+          tab.innerHTML = "";
+          tab.appendChild(node);
+          if (link.classList.contains(activeCls.split(" ")[0])) {
+            tab.style.display = "block";
+            tab.style.visibility = "visible";
+          }
+        }
+      });
+    } else if (c) tab.appendChild(c);
+    tabs.push(tab);
+    content.appendChild(tab);
     link.onclick = e => {
       e.preventDefault();
-      side.querySelectorAll("a").forEach(a => a.classList.remove("active"));
-      link.classList.add("active");
-      tabs.forEach((t, j) => (t.style.display = j === i ? "block" : "none"));
-      animate(".soft-card");
+      side.querySelectorAll("a").forEach(a => (a.className = `nav-link fw-bold d-block py-3 rounded-pill text-center ${baseCls}`));
+      link.className = `nav-link fw-bold d-block py-3 rounded-pill text-center ${baseCls} ${activeCls}`;
+      tabs.forEach((t, j) => {
+        const active = j === i;
+        t.style.display = active ? "block" : "none";
+        t.style.visibility = active ? "visible" : "hidden";
+      });
+      if (typeof it.onClick === "function") it.onClick(link, i);
+      if (typeof it.onSelect === "function") it.onSelect(link, i);
     };
-    if (it.onHover) link.onmouseenter = () => it.onHover(link);
-    if (it.onLeave) link.onmouseleave = () => it.onLeave(link);
+    link.onmouseenter = () => {
+      if (!link.className.includes(activeCls)) link.classList.add(...hoverCls.split(" "));
+      if (typeof it.onHover === "function") it.onHover(link, i);
+    };
+    link.onmouseleave = () => {
+      if (!link.className.includes(activeCls)) link.classList.remove(...hoverCls.split(" "));
+      if (typeof it.onLeave === "function") it.onLeave(link, i);
+    };
     side.appendChild(link);
   });
   wrap.appendChild(side);
@@ -626,23 +678,20 @@ const sidebarNav = (items) => {
 
 // addCopyIcon(value:string|Node) → HTMLSpanElement
 // ex: addCopyIcon("Copy me!")
-const addCopyIcon = (value) => {
-  const wrap = el("span", "d-inline-flex align-items-center");
-  const text =
-    value instanceof Node
-      ? value.cloneNode(true)
-      : el("span", "me-2 fw-semibold text-dark", String(value));
-  const icon = el("i", "bi bi-clipboard ms-1 text-muted fs-6");
-  icon.style.cursor = "pointer";
+const addCopyIcon = value => {
+  const wrap = el('span', 'd-inline-flex align-items-center');
+  const text = value instanceof Node ? value.cloneNode(true) : el('span', 'me-2 fw-semibold text-dark', String(value));
+  const icon = el('i', 'bi bi-clipboard ms-1 text-muted fs-6');
+  icon.style.cursor = 'pointer';
   icon.onclick = async () => {
     try {
       const copyVal = text.textContent || String(value);
       await navigator.clipboard.writeText(copyVal);
-      icon.className = "bi bi-clipboard-check ms-1 text-success fs-6";
-      setTimeout(() => (icon.className = "bi bi-clipboard ms-1 text-muted fs-6"), 1500);
+      icon.className = 'bi bi-clipboard-check ms-1 text-success fs-6';
+      setTimeout(() => (icon.className = 'bi bi-clipboard ms-1 text-muted fs-6'), 1500);
     } catch {
-      icon.className = "bi bi-x-circle ms-1 text-danger fs-6";
-      setTimeout(() => (icon.className = "bi bi-clipboard ms-1 text-muted fs-6"), 1500);
+      icon.className = 'bi bi-x-circle ms-1 text-danger fs-6';
+      setTimeout(() => (icon.className = 'bi bi-clipboard ms-1 text-muted fs-6'), 1500);
     }
   };
   wrap.appendChild(text);
@@ -653,58 +702,60 @@ const addCopyIcon = (value) => {
 // wrapWithTooltip(text:string, maxWidth:string) → HTMLSpanElement
 // ex: wrapWithTooltip("Long text","40%")
 const wrapWithTooltip = (text, maxWidth) => {
-  const span = el("span");
+  const span = el('span');
   span.textContent = text;
   span.style.maxWidth = maxWidth;
-  span.style.display = "inline-block";
-  span.style.whiteSpace = "normal";
-  span.style.wordBreak = "break-word";
-  span.style.overflowWrap = "anywhere"; 
+  span.style.display = 'inline-block';
+  span.style.whiteSpace = 'normal';
+  span.style.wordBreak = 'break-word';
+  span.style.overflowWrap = 'anywhere';
   span.title = text;
   return span;
 };
 
 // buildNestedSections(data:array, depth?:number, opts?:object) → HTMLDivElement
-//  opts.collapsIf1:{bool:boolean, exclude:string[]} 
+//  opts.collapsIf1:{bool:boolean, exclude:string[]}
 //   - bool → if true, even single child collapses
 //   - exclude → array of section titles to skip collapsing
 // ex: buildNestedSections([["Account",[["General",[["Username","Alice"],["Email","alice@example.com"]]]]]])
-const buildNestedSections = (data, depth = 0, opts = { collapsIf1: { bool:false, exclude:[] } }) => {
-  const wrap = el("div", depth === 0 ? "" : "p-2");
+const buildNestedSections = (data, depth = 0, opts = { collapsIf1: { bool: false, exclude: [] } }) => {
+  const wrap = el('div', depth === 0 ? '' : 'p-2');
   data.forEach(([title, children]) => {
-    const sec = el("div", "mb-2 border rounded");
-    const head = el("div","d-flex justify-content-between align-items-center p-2 flex-wrap");
+    const sec = el('div', 'mb-2 border rounded');
+    const head = el('div', 'd-flex justify-content-between align-items-center p-2 flex-wrap');
     if (title instanceof Node) head.appendChild(title);
     else {
-      const span = el("span", depth===0?"fw-bold text-truncate":"fw-semibold small text-truncate", title);
-      span.style.maxWidth = "90%";
+      const span = el('span', depth === 0 ? 'fw-bold text-truncate' : 'fw-semibold small text-truncate', title);
+      span.style.maxWidth = '90%';
       head.appendChild(span);
     }
-    const body = el("div");
+    const body = el('div');
     const isNested = Array.isArray(children) && Array.isArray(children[0]);
     if (isNested) {
       const childCount = children.length;
-      const nestedBody = buildNestedSections(children, depth+1, opts);
+      const nestedBody = buildNestedSections(children, depth + 1, opts);
       body.appendChild(nestedBody);
-      const excluded = typeof title==="string" && opts.collapsIf1.exclude.includes(title);
+      const excluded = typeof title === 'string' && opts.collapsIf1.exclude.includes(title);
       if ((opts.collapsIf1.bool || childCount > 1) && !excluded) {
-        const icon = el("span","ms-2","▼");
+        const icon = el('span', 'ms-2', '▼');
         head.appendChild(icon);
-        head.style.cursor = "pointer";
-        body.style.display = "block";
+        head.style.cursor = 'pointer';
+        body.style.display = 'block';
         head.onclick = () => {
-          const open = body.style.display === "block";
-          body.style.display = open ? "none" : "block";
-          icon.textContent = open ? "▶" : "▼";
+          const open = body.style.display === 'block';
+          body.style.display = open ? 'none' : 'block';
+          icon.textContent = open ? '▶' : '▼';
         };
       }
     } else {
-      const list = el("div","list-group list-group-flush");
-      const safe = Array.isArray(children)?children:[[children,"—"]];
-      safe.forEach(([k,v])=>{
-        const item = el("div","list-group-item d-flex justify-content-between align-items-center flex-wrap");
-        if (k instanceof Node) item.appendChild(k); else item.appendChild(wrapWithTooltip(k??"—","40%"));
-        if (v instanceof Node) item.appendChild(v); else item.appendChild(wrapWithTooltip(v??"—","55%"));
+      const list = el('div', 'list-group list-group-flush');
+      const safe = Array.isArray(children) ? children : [[children, '—']];
+      safe.forEach(([k, v]) => {
+        const item = el('div', 'list-group-item d-flex justify-content-between align-items-center flex-wrap');
+        if (k instanceof Node) item.appendChild(k);
+        else item.appendChild(wrapWithTooltip(k ?? '—', '40%'));
+        if (v instanceof Node) item.appendChild(v);
+        else item.appendChild(wrapWithTooltip(v ?? '—', '55%'));
         list.appendChild(item);
       });
       body.appendChild(list);
@@ -717,170 +768,43 @@ const buildNestedSections = (data, depth = 0, opts = { collapsIf1: { bool:false,
 };
 
 // fieldCardCollapsibleSections(title:string|Node, sections:array, opts?:object) → HTMLDivElement
-// opts.collapsIf1:{bool:boolean, exclude:string[]} 
+// opts.collapsIf1:{bool:boolean, exclude:string[]}
 // ex: fieldCardCollapsibleSections("User Info", [...], {collapsIf1:{bool:true,exclude:["General"]}})
-const fieldCardCollapsibleSections = (title, sections, opts={collapsIf1:{bool:false,exclude:[]}}) => {
-  const head = el("div","d-flex justify-content-between align-items-center mb-3 flex-wrap");
+const fieldCardCollapsibleSections = (title, sections, opts = { collapsIf1: { bool: false, exclude: [] } }) => {
+  const head = el('div', 'd-flex justify-content-between align-items-center mb-3 flex-wrap');
   if (title instanceof Node) head.appendChild(title);
   else {
-    const span=el("div","fw-bold fs-5 text-truncate",title);
-    span.style.maxWidth="90%";
+    const span = el('div', 'fw-bold fs-5 text-truncate', title);
+    span.style.maxWidth = '90%';
     head.appendChild(span);
   }
-  const body=buildNestedSections(sections,0,opts);
-  const cont=el("div");
+  const body = buildNestedSections(sections, 0, opts);
+  const cont = el('div');
   cont.appendChild(head);
   cont.appendChild(body);
-  const icon=el("span","ms-2","▼");
+  const icon = el('span', 'ms-2', '▼');
   head.appendChild(icon);
-  head.style.cursor="pointer";
-  head.onclick=()=>{
-    const open=body.style.display!=="none";
-    body.style.display=open?"none":"block";
-    icon.textContent=open?"▶":"▼";
+  head.style.cursor = 'pointer';
+  head.onclick = () => {
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    icon.textContent = open ? '▶' : '▼';
   };
-  return card("",cont);
+  return card('', cont);
 };
 
-
-const main = () => {
-  // ---------------- Dashboard ----------------
-  const dash = document.getElementById('dashboard');
-  const dashHeader = header('Dredbot Admin Dashboard');
-  dash.appendChild(dashHeader);
-
-  const hamburgerBtn = el('button', 'btn btn-light btn-sm', '☰');
-  hamburgerBtn.type = 'button';
-  hamburgerBtn.style.fontSize = '18px';
-  hamburgerBtn.style.padding = '4px 8px';
-  hamburgerBtn.style.cursor = 'pointer';
-  const langMenu = dropdown(
-    [
-      { label: 'EN', onClick: () => (hamburgerBtn.textContent = '☰') },
-      { label: 'FR', onClick: () => (hamburgerBtn.textContent = '☰') },
-      { label: 'ES', onClick: () => (hamburgerBtn.textContent = '☰') },
-    ],
-    hamburgerBtn,
-    "dropdown-menu show langMenu"
-  );
-  langMenu.style.display = 'none';
-  langMenu.style.position = 'absolute';
-  langMenu.style.minWidth = '80px';
-  langMenu.style.zIndex = '2';
-  document.body.appendChild(langMenu);
-  hamburgerBtn.onclick = e => {
-    animate('#langMenu');
-    e.stopPropagation();
-    if (langMenu.style.display === 'none') {
-      const rect = hamburgerBtn.getBoundingClientRect();
-      langMenu.style.top = rect.bottom + 'px';
-      langMenu.style.left = rect.left + 'px';
-      langMenu.style.display = 'block';
-      hamburgerBtn.textContent = '⇩';
-    } else {
-      hamburgerBtn.textContent = '☰';
-      langMenu.style.display = 'none';
-    }
-  };
-  const langWrapper = el('div', 'ms-auto');
-  langWrapper.appendChild(hamburgerBtn);
-  dashHeader.appendChild(langWrapper);
-  document.addEventListener("click", () => {
-    langMenu.style.display = "none";
-    hamburgerBtn.textContent = '☰';
-  });
-  dash.appendChild(
-    sidebarNav([
-      {
-        label: 'Overview',
-        content: async () => {
-          const res = await fetch('/get-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ formatNumber: true }),
-          });
-          const data = await res.json();
-          if (!data.success) return el('div', 'text-danger', 'Failed to load profile.');
-          const profile = data.profile;
-          return row(
-            fieldCardCollapsibleSections('User Profile', [
-              ['Account',
-                [['General',
-                    [
-                      ['Username', addCopyIcon(profile.username)],
-                      ['User ID', addCopyIcon(profile.userId || 'N/A')],
-                      ['Banned', pillText(profile.banned ? 'Yes' : 'No', profile.banned ? 'danger' : 'success')],
-                    ],
-                  ],
-                ],
-              ],
-              ['Statistics',
-                [['Usage',
-                    [
-                      ['Dredcoin Balance', addCopyIcon(profile.balance)],
-                      ['Commands Executed', profile.command_execute || 0],
-                      ['Daily Streak', `${profile.dailyStreak} (next: ${profile.next_streaks.daily}, expire: ${profile.expire_streaks.daily})`],
-                      ['Weekly Streak', `${profile.weeklyStreak} (next: ${profile.next_streaks.weekly}, expire: ${profile.expire_streaks.weekly})`],
-                      ['Monthly Streak', `${profile.monthlyStreak} (next: ${profile.next_streaks.monthly}, expire: ${profile.expire_streaks.monthly})`],
-                      ['Yearly Streak', `${profile.yearlyStreak} (next: ${profile.next_streaks.yearly}, expire: ${profile.expire_streaks.yearly})`],
-                    ],
-                  ],
-                ],
-              ],
-            ]),
-            ...(profile.inventory && profile.inventory.length >= 1
-              ? [
-                  fieldCardCollapsibleSections(
-                    'Inventory',
-                    Object.entries(profile.inventory).map(([key, item]) => [
-                      item.name || key,
-                      [['Details',
-                          [
-                            ['Name', item.name || '—'],
-                            ['Description', item.description || '—'],
-                            ['Rarity', item.rarity ? pillText(item.rarity, getRarityStyle(item.rarity).color) : '—'],
-                            ['Enchanted', pillText(item.enchanted ? 'Yes' : 'No', item.enchanted ? 'success' : 'secondary')],
-                            ['Enchants', Array.isArray(item.enchants) && item.enchants.length ? pillText(item.enchants.map(e => e.name || '—').join(', '), getRarityStyle(item.enchants[0].rarity).color) : pillText('—', 'secondary')],
-                            ['Icon', item.icon ? item.icon : '—'],
-                          ],
-                        ],
-                      ],
-                    ])
-                  ),
-                ]
-              : [])
-          );
-        },
-      },
-      {
-        label: 'Users',
-        content: () => {
-          const cols = ['ID', 'Name', 'Role'];
-          const data = [
-            [1, 'Alice', 'Admin'],
-            [2, 'Bob', 'User'],
-            [3, 'Charlie', 'Editor'],
-          ];
-          return tableWithPagination('User List', cols, data, 5);
-        },
-      },
-    ])
-  );
+// topBar(sticky?:boolean, classes?:string, style?:object) → HTMLElement
+// ex: const bar = topBar(true, "custom-bar", {backgroundColor:"#fafafa"});
+const topBar = (sticky = false, classes = "", style = {}) => {
+  const bar = el("nav", `navbar bg-white px-3 mb-4 shadow-sm d-flex align-items-center ${classes}`.trim());
+  if (sticky) Object.assign(bar.style, {position:"sticky", top:"0", zIndex:"1030"});
+  Object.assign(bar.style, style);
+  bar.addItem = item => bar.appendChild(item);
+  return bar;
 };
 
 // ---------------- Animation ----------------
 // animate(query:`.classname`|`#id`|`tagname`): void
-const animate = (query) => {
+const animate = query => {
   document.querySelectorAll(query).forEach((c, i) => setTimeout(() => c.classList.add('show'), 100 * i));
 };
-
-
-
-// ---------------- Init ---------------
-window.addEventListener('load', () => {
-  main();
-  animate('.soft-card');
-  animate('.langMenu');
-  loadLanguage('en');
-});
