@@ -143,7 +143,7 @@ await (async function () {
     let username = null;
     let data = null;
     const accountId = message.author.id;
-    data = helper.loadDataByAccountId(accountId);
+    data = db.loadDataByAccountId(accountId);
     if (data && Object.keys(data).length > 0) username = helper.loadUsernameByAccountId(accountId);
     if (!data && !['login', 'anonymous', ...(commands['login']?.aliases || []), ...(commands['anonymous']?.aliases || [])].includes(command)) {
       const embed = await commandUsage.commandEmbed({
@@ -249,6 +249,8 @@ await (async function () {
         return res;
       };
       try {
+        data.command_execute++;
+        await db.saveData(username, data)
         await commands.execute(message, args, username, originalCommand, dependencies);
       } finally {
         message.reply = originalReply;
