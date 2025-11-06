@@ -1002,25 +1002,28 @@ export const getMissionState = selfWrap(async function getMissionState() {
   const cycle = openDur + closeDur;
   const firstOpenTs = config.MISSION_START_TS;
   const now = Math.floor(Date.now() / 1000);
-
-  if (now < firstOpenTs)
-    return successMsg(this.name, ``, 0, {
-      state: 'CLOSED',
-      timeLeft: firstOpenTs - now,
-      nextChange: firstOpenTs,
+  if (now < firstOpenTs) {
+    const t = firstOpenTs - now;
+    return successMsg(this.name, "", 0, {
+      state: "CLOSED",
+      timeLeft: t,
+      nextChange: firstOpenTs
     });
-
-  const elapsed = (now - firstOpenTs) % cycle;
-  if (elapsed < openDur)
-    return successMsg(this.name, ``, 0, {
-      state: 'OPEN',
-      timeLeft: openDur - elapsed,
-      nextChange: now + (openDur - elapsed),
+  }
+  const elapsed = Math.max(0, (now - firstOpenTs) % cycle);
+  if (elapsed < openDur) {
+    const t = Math.max(0, openDur - elapsed);
+    return successMsg(this.name, "", 0, {
+      state: "OPEN",
+      timeLeft: t,
+      nextChange: now + t
     });
-  return successMsg(this.name, ``, 0, {
-    state: 'CLOSED',
-    timeLeft: cycle - elapsed,
-    nextChange: now + (cycle - elapsed),
+  }
+  const t = Math.max(0, cycle - elapsed);
+  return successMsg(this.name, "", 0, {
+    state: "CLOSED",
+    timeLeft: t,
+    nextChange: now + t
   });
 });
 export const getFutureMission = selfWrap(async function getFutureMission(count = 3) {
@@ -1029,9 +1032,9 @@ export const getFutureMission = selfWrap(async function getFutureMission(count =
   const cycle = openDur + closeDur;
   const firstOpenTs = config.MISSION_START_TS;
   const now = Math.floor(Date.now() / 1000);
-  const cyclesPassed = Math.floor((now - firstOpenTs) / cycle);
+  const cyclesPassed = Math.floor(Math.max(0, (now - firstOpenTs) / cycle));
   let t = firstOpenTs + cyclesPassed * cycle;
-  if (t < now) t += cycle;
+  if (t <= now) t += cycle;
   const list = [];
   for (let i = 0; i < count; i++) {
     const o = t + i * cycle;
@@ -1083,7 +1086,7 @@ export const getDrednotLeaderboard = selfWrap(async function getDrednotLeaderboa
   const cat = Map[category?.toLowerCase()];
   if (!cat)
     return errorMsg(this.name, `Invalid category.`, 0);
-  const statusPath = paths.database.scrapedo;
+  const statusPath = paths.database.scrape_do;
   const cachePath = paths.database.leaderboardCache;
   const cacheKey = `${cat}_${by}_${page}`;
   let state,

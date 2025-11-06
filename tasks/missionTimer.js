@@ -16,26 +16,34 @@ export const newMissionButtons = () => new ActionRowBuilder().addComponents(
   new ButtonBuilder().setCustomId("vote_vulture").setLabel(`Vulture (${votes.vulture})`).setStyle(ButtonStyle.Danger)
 );
 
-const getMissionState = (firstOpenTs) => {
+const getMissionState = async (firstOpenTs) => {
   const now = Math.floor(Date.now() / 1000);
-  if (now < firstOpenTs) return { state: "CLOSED", timeLeft: firstOpenTs - now, nextChange: firstOpenTs };
-  const elapsed = (now - firstOpenTs) % cycle;
-  if (elapsed < openDur) return { state: "OPEN", timeLeft: openDur - elapsed, nextChange: now + (openDur - elapsed) };
-  return { state: "CLOSED", timeLeft: cycle - elapsed, nextChange: now + (cycle - elapsed) };
+  const elapsed = Math.max(0, now - firstOpenTs);
+  const cyclePos = elapsed % cycle;
+  if (now < firstOpenTs) {
+    const t = firstOpenTs - now;
+    return { state: "CLOSED", timeLeft: t, nextChange: firstOpenTs };
+  }
+  if (cyclePos < openDur) {
+    const t = openDur - cyclePos;
+    return { state: "OPEN", timeLeft: Math.max(0, t), nextChange: now + t };
+  }
+  const t = cycle - cyclePos;
+  return { state: "CLOSED", timeLeft: Math.max(0, t), nextChange: now + t };
 };
 
-const getFutureCycles = (firstOpenTs, count) => {
+const getFutureCycles = async (firstOpenTs, count) => {
   const now = Math.floor(Date.now() / 1000);
-  const cyclesPassed = Math.floor((now - firstOpenTs) / cycle);
+  const cyclesPassed = Math.floor(Math.max(0, (now - firstOpenTs) / cycle));
   let t = firstOpenTs + cyclesPassed * cycle;
-  if (t < now) t += cycle;
+  if (t <= now) t += cycle;
   const list = [];
   for (let i = 0; i < count; i++) {
     const o = t + i * cycle;
     const c = o + openDur;
     list.push({ open: o, close: c });
   }
-  return list;
+  return { list };
 };
 
 export const setupMissionTimer = async (bot) => {
@@ -47,18 +55,18 @@ export const setupMissionTimer = async (bot) => {
     return `${sorted[0][0][0].toUpperCase() + sorted[0][0].slice(1)} (${sorted[0][1]} votes)`;
   };
   async function update() {
-    const { state, nextChange } = getMissionState(config.MISSION_START_TS);
+    const { state, nextChange } = await getMissionState(config.MISSION_START_TS);
     if (lastState !== state) {
       lastState = state;
       votes = { pits: 0, canary: 0, vulture: 0 };
       voters.clear();
     }
     const emoji = state === "OPEN" ? "✅" : "❌";
-    const future = getFutureCycles(config.MISSION_START_TS, config.MISSION_SHOW_FUTURE || 3);
+    const future = await getFutureCycles(config.MISSION_START_TS, config.MISSION_SHOW_FUTURE || 3);
     let desc = `**State**: ${emoji} ${state}\n`;
     desc += state === "OPEN" ? `**Close in**: <t:${nextChange}:R>\n` : `**Open in**: <t:${nextChange}:R>\n`;
     desc += `**Current mission (based on votes)**: ${getWinningVote()}\n\n**Upcoming Missions:**\n`;
-    for (const { open, close } of future) desc += `🟢 Open: <t:${open}:R> | 🔴 Close: <t:${close}:R>\n`;
+    for (const { open, close } of future.list) desc += `🟢 Open: <t:${open}:R> | 🔴 Close: <t:${close}:R>\n`;
     const embed = new EmbedBuilder()
       .setTitle("Mission Timer")
       .setColor(state === "OPEN" ? 0x00ff00 : 0xff0000)

@@ -9,7 +9,7 @@ export default {
   globalCooldown: 0,
   id: 59,
   dependencies: `commandEmbed formatAmount config parseAmount randomNumber parseBet getDredcoin
-                 addDredcoin removeDredcoin gambleStreak getGambleStreak scheduleDelete`,
+                 addDredcoin removeDredcoin gambleStreak getGambleStreak scheduleDelete loadData`,
   execute: async (message, args, user, command, dep) => {
     const data = await dep.loadData(user);
     const balance = await dep.getDredcoin(user);

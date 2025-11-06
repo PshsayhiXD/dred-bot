@@ -201,7 +201,7 @@ await (async function () {
       cooldownResult = await helper.Cooldown(username, command);
       if (!cooldownResult) await helper.newCooldown(username, command, commands.cooldown);
       else {
-        const embed = await commandUsage.commandEmbed({ title: `⏳ Cooldown`, description: `You must wait **${timeLeft(cooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`, user: username, reward: false, message });
+        const embed = await commandUsage.commandEmbed({ title: `⏳ Cooldown`, description: `You must wait **${await timeLeft(cooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`, user: username, reward: false, message });
         return message.reply({ embeds: [embed] });
       }
     } catch (err) {
@@ -213,7 +213,7 @@ await (async function () {
       else {
         const embed = await commandUsage.commandEmbed({
           title: `⏳ Global Cooldown`,
-          description: `You have recently used this command. Please wait **${timeLeft(globalCooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`,
+          description: `You have recently used this command. Please wait **${await timeLeft(globalCooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`,
           user: username,
           reward: false,
           message,
