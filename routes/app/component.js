@@ -5,5 +5,8 @@ export default ({}) => {
   Router.get('/component.js', (req, res) => {
     res.sendFile(paths.html.component);
   });
+  Router.get('/component.test.js', (req, res) => {
+    res.sendFile(paths.html.component_test);
+  });
   return Router;
 };

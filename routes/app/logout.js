@@ -5,11 +5,12 @@ export default ({ loadAllData, saveData }) => {
   Router.post('/logout', async (req, res) => {
     const authToken = req.cookies['d_sess'];
     const data = await loadAllData();
-    const user = Object.values(data).find((u) => u.account.cookie === authToken);
+    const user = Object.values(data).find((u) => u.account?.cookie === authToken);
     if (user) user.account.cookie = null;
+    else return res.status(404).send('[+] Account cookie not found.')
     await saveData(user, data);
     try { res.clearCookie('d_sess'); } catch (e) {}
-    res.status(200).send('[+] Logged out.');
+    return res.status(200).send('[+] Logged out.');
   });
   return Router;
 };

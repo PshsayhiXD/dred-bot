@@ -8,8 +8,8 @@ export default ({ loadAllData, log, helper }) => {
       if (!authToken) return res.status(401).json({ success: false, message: '[401] No cookie.' });
       const users = await loadAllData();
       const matchedUser = users.find(u => u.account?.cookie === authToken);
-      const user = matchedUser.username || '';
       if (!matchedUser) return res.status(404).json({ success: false, message: '[404] Failed.' });
+      const user = matchedUser.username || '';
       await helper.initUserObject(user);
       const formatAmount = async (amount) => helper.formatAmount(amount);
       const formatTime = async (time) => helper.formatTime(time);
@@ -18,7 +18,7 @@ export default ({ loadAllData, log, helper }) => {
         for (const [itemKey, itemVal] of Object.entries(matchedUser.inventory)) {
           if (!itemVal || typeof itemVal !== 'object') continue;
           inv[itemKey] = {
-            category: catKey,
+            category: itemVal.category || "misc",
             count: itemVal.count || 0,
             name: itemVal.name || itemKey,
             description: itemVal.description || '',
