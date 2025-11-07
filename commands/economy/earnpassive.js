@@ -52,7 +52,7 @@ export default {
       ]);
       return message.reply({ ...result, components: buttons });
     } catch (err) {
-      dep.log(`[earnpassive] ${err}`, "error");
+      dep.log(`[earnpassive] ${err.stack}`, "error");
       return message.reply(`❌ [earnpassive]: \`${err.message}\``);
     }
   }

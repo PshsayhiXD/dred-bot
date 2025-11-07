@@ -64,7 +64,7 @@ export default {
         const fake = outcomes[Math.floor(await dep.randomNumber() * outcomes.length)];
         const embed = await dep.commandEmbed({
           title: `${dep.config.PREFIX}${command} ${bet}`,
-          description: `🎲 **Rolling...**\n` + (typeof fake.text === 'function' ? (fake.m === 0 ? fake.text() : fake.text(Math.floor(bet * fake.m))) : ''),
+          description: `🎲 **Rolling...**\n` + (typeof fake.text === 'function' ? (fake.m === 0 ? await fake.text() : await fake.text(Math.floor(bet * fake.m))) : ''),
           color: fake.color,
           user,
           reward: false,
@@ -81,7 +81,7 @@ export default {
         const streak = await dep.getGambleStreak(user);
         const embed = await dep.commandEmbed({
           title: `${dep.config.PREFIX}${command} ${bet}`,
-          description: `${chosen.text(amt)}\n` + `💰 Balance: **\`${await dep.formatAmount(newBalance)}\`**.\n` + `🔥 Streak: **\`${streak}\`**.`,
+          description: `${await chosen.text(amt)}\n` + `💰 Balance: **\`${await dep.formatAmount(newBalance)}\`**.\n` + `🔥 Streak: **\`${streak}\`**.`,
           color: chosen.color,
           user,
           reward: false,

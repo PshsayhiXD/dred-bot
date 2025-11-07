@@ -9,7 +9,7 @@ export default {
   globalCooldown: 1,
   id: 1,
   dependencies: `getDredcoin getBankBalance formatAmount parseBet
-                 commandEmbed config commandButtonComponent 
+                 commandEmbed config commandButtonComponent
                  commandModal transferDredcoin withdrawDredcoin depositDredcoin`,
   execute: async (message, args, user, command, dep) => {
     const target = args[0] ? args[0] : user;

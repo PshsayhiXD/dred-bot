@@ -8,7 +8,7 @@ export default {
   cooldown: 60,
   globalCooldown: 1,
   id: 38,
-  dependencies: `commandEmbed formatAmount config randomNumber 
+  dependencies: `commandEmbed formatAmount config randomNumber giveDredcoin 
                  commandButtonComponent Cooldown newCooldown formatTime`,
   execute: async (message, args, user, command, dep) => {
     const doBeg = async () => {
@@ -33,6 +33,7 @@ export default {
         reward: true,
         message
       });
+      await dep.giveDredcoin(user, amount);
       return { embeds: [embed] };
     };
     const result = await doBeg();

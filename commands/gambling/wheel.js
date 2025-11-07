@@ -8,7 +8,7 @@ export default {
   cooldown: 10,
   globalCooldown: 0,
   id: 58,
-  dependencies: `commandEmbed formatAmount config addDredcoin randomNumber parseBet
+  dependencies: `commandEmbed formatAmount config addDredcoin getDredcoin randomNumber parseBet
                  removeDredcoin loadData parseAmount gambleStreak getGambleStreak scheduleDelete`,
   execute: async (message, args, user, command, dep) => {
     const data = await dep.loadData(user);

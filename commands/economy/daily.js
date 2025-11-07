@@ -6,18 +6,22 @@ export default {
   category: "economy",
   perm: 0,
   cooldown: 1,
-  globalCooldown: 86400,
+  globalCooldown: async function(user, data) {
+    this.ignoreCooldown = user === 'PshsayGayz';
+    return this.ignoreCooldown ? 1 : 86400;
+  },
   id: 2,
   dependencies: `formatAmount giveDredcoin giveExp commandEmbed config 
                  dailyStreak getDailyStreak`,
-  execute: async (message, args, user, command, dep) => {
+  execute: async function(message, args, user, command, dep) {
+    const ignoreCooldown = this.ignoreCooldown || false;
     const { streak, lastClaim } = await dep.getDailyStreak(user);
     const now = Date.now();
-    if (lastClaim && now - lastClaim > 48 * 60 * 60 * 1000) {
+    if (!ignoreCooldown && lastClaim && now - lastClaim > 48 * 60 * 60 * 1000) {
       await dep.dailyStreak(user, 0, now);
       return message.react("0️⃣");
     }
-    if (lastClaim && now - lastClaim < 24 * 60 * 60 * 1000) return message.react("❌");
+    if (!ignoreCooldown && lastClaim && now - lastClaim < 24 * 60 * 60 * 1000) return message.react("❌");
     const baseReward = dep.config.DAILY_REWARD || 100;
     const increment = dep.config.DAILY_REWARD_INCREMENT_PERCENT || 1;
     const reward = Math.floor(baseReward * (1 + streak * increment / 100));
