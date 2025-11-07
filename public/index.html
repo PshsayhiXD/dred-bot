@@ -34,7 +34,7 @@
       } catch(e) {
         console.warn("Profile check failed:", e);
       }
-
+      console.log(user);
       const root = document.getElementById("home");
       const bar = topBar(true, "bg-white shadow-sm justify-content-between");
       const brand = el("span", "fw-bold text-primary fs-3 me-3", "Dredbot");
