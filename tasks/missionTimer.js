@@ -1,90 +1,78 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { commandEmbed } from "../utils/commandComponent.js";
 import config from "../config.js";
 import log from "../utils/logger.js";
+import { getFutureMission, getMissionState } from '../utils/helper.js';
 
-const openDur = config.MISSION_CLOSE_DURATION;
-const closeDur = config.MISSION_OPEN_DURATION;
-const cycle = openDur + closeDur;
+log('THIS FILE IS MEMORY-LEAKING, USE AT YOUR OWN RISK.')
 
-export let votes = { pits: 0, canary: 0, vulture: 0 };
-export let voters = new Set();
-export let lastState = null;
+let votes = { pits: 0, canary: 0, vulture: 0 };
+let voters = new Set();
+let lastState = null;
 
-export const newMissionButtons = () => new ActionRowBuilder().addComponents(
-  new ButtonBuilder().setCustomId("vote_pits").setLabel(`Pits (${votes.pits})`).setStyle(ButtonStyle.Primary),
-  new ButtonBuilder().setCustomId("vote_canary").setLabel(`Canary (${votes.canary})`).setStyle(ButtonStyle.Success),
-  new ButtonBuilder().setCustomId("vote_vulture").setLabel(`Vulture (${votes.vulture})`).setStyle(ButtonStyle.Danger)
+let missionInterval = null;
+let updating = false;
+const buttonRow = new ActionRowBuilder().addComponents(
+  new ButtonBuilder().setCustomId("vote_pits").setStyle(ButtonStyle.Primary).setLabel("Pits"),
+  new ButtonBuilder().setCustomId("vote_canary").setStyle(ButtonStyle.Success).setLabel("Canary"),
+  new ButtonBuilder().setCustomId("vote_vulture").setStyle(ButtonStyle.Danger).setLabel("Vulture")
 );
-
-const getMissionState = async (firstOpenTs) => {
-  const now = Math.floor(Date.now() / 1000);
-  const elapsed = Math.max(0, now - firstOpenTs);
-  const cyclePos = elapsed % cycle;
-  if (now < firstOpenTs) {
-    const t = firstOpenTs - now;
-    return { state: "CLOSED", timeLeft: t, nextChange: firstOpenTs };
-  }
-  if (cyclePos < openDur) {
-    const t = openDur - cyclePos;
-    return { state: "OPEN", timeLeft: Math.max(0, t), nextChange: now + t };
-  }
-  const t = cycle - cyclePos;
-  return { state: "CLOSED", timeLeft: Math.max(0, t), nextChange: now + t };
+export const newMissionButtons = () => {
+  buttonRow.components[0].setLabel(`Pits (${votes.pits})`);
+  buttonRow.components[1].setLabel(`Canary (${votes.canary})`);
+  buttonRow.components[2].setLabel(`Vulture (${votes.vulture})`);
+  return [buttonRow];
 };
-
-const getFutureCycles = async (firstOpenTs, count) => {
-  const now = Math.floor(Date.now() / 1000);
-  const cyclesPassed = Math.floor(Math.max(0, (now - firstOpenTs) / cycle));
-  let t = firstOpenTs + cyclesPassed * cycle;
-  if (t <= now) t += cycle;
-  const list = [];
-  for (let i = 0; i < count; i++) {
-    const o = t + i * cycle;
-    const c = o + openDur;
-    list.push({ open: o, close: c });
-  }
-  return { list };
+export const vote = (userId, key, state) => {
+  if (state !== "OPEN") return false;
+  if (voters.has(userId)) return false;
+  votes[key]++;
+  voters.add(userId);
+  return true;
 };
-
 export const setupMissionTimer = async (bot) => {
+  if (missionInterval) return;
   const channel = await bot.channels.fetch(config.MissionTimerChannelID);
   if (!channel?.isTextBased()) return log("[setupMissionTimer]: Invalid channel.", "error");
-  const getWinningVote = () => {
-    const sorted = Object.entries(votes).sort((a, b) => b[1] - a[1]);
-    if (sorted[0][1] === 0) return "No votes yet";
-    return `${sorted[0][0][0].toUpperCase() + sorted[0][0].slice(1)} (${sorted[0][1]} votes)`;
-  };
-  async function update() {
-    const { state, nextChange } = await getMissionState(config.MISSION_START_TS);
-    if (lastState !== state) {
-      lastState = state;
-      votes = { pits: 0, canary: 0, vulture: 0 };
-      voters.clear();
-    }
-    const emoji = state === "OPEN" ? "✅" : "❌";
-    const future = await getFutureCycles(config.MISSION_START_TS, config.MISSION_SHOW_FUTURE || 3);
-    let desc = `**State**: ${emoji} ${state}\n`;
-    desc += state === "OPEN" ? `**Close in**: <t:${nextChange}:R>\n` : `**Open in**: <t:${nextChange}:R>\n`;
-    desc += `**Current mission (based on votes)**: ${getWinningVote()}\n\n**Upcoming Missions:**\n`;
-    for (const { open, close } of future.list) desc += `🟢 Open: <t:${open}:R> | 🔴 Close: <t:${close}:R>\n`;
-    const embed = new EmbedBuilder()
-      .setTitle("Mission Timer")
-      .setColor(state === "OPEN" ? 0x00ff00 : 0xff0000)
-      .setDescription(desc)
-      .setTimestamp()
-      .setFooter({ text: `Updates every ${config.MISSION_TIMER_INTERVAL}s`, iconURL: bot.user.displayAvatarURL() });
+  const update = async () => {
+    if (updating) return;
+    updating = true;
     try {
+      const { state, nextChange } = await getMissionState(config.MISSION_START_TS);
+      if (lastState !== state) {
+        lastState = state;
+        votes = { pits: 0, canary: 0, vulture: 0 };
+        voters.clear();
+      }
+      const emoji = state === "OPEN" ? "✅" : "❌";
+      const future = await getFutureMission(config.MISSION_START_TS, config.MISSION_SHOW_FUTURE || 3);
+      let desc = `**State**: ${emoji} ${state}\n`;
+      desc += state === "OPEN" ? `**Close in**: <t:${nextChange}:R>\n` : `**Open in**: <t:${nextChange}:R>\n`;
+      const sorted = Object.entries(votes).sort((a, b) => b[1] - a[1]);
+      const currentVote = sorted[0]?.[1] === 0 ? "No votes yet" : `${sorted[0][0][0].toUpperCase() + sorted[0][0].slice(1)} (${sorted[0][1]} votes)`;
+      desc += `**Current mission (based on votes)**: ${currentVote}\n`;
+      desc += `**Upcoming Missions:**\n`;
+      for (const { open, close } of future.list) desc += `🟢 Open: <t:${open}:R> | 🔴 Close: <t:${close}:R>\n`;
+      const embed = await commandEmbed({
+        title: "Mission Timer",
+        description: desc,
+        color: state === "OPEN" ? 0x00ff00 : 0xff0000,
+        footer: { text: `Updates every ${config.MISSION_TIMER_INTERVAL || 60}s`, iconURL: bot.user.displayAvatarURL() },
+        timestamp: true
+      });
       const messages = await channel.messages.fetch({ limit: 10 });
-      const exist = messages.find(m => m.author.id === bot.user.id && m.embeds.length > 0) || false;
-      if (exist) await exist.edit({ embeds: [embed], components: [newMissionButtons()] });
-      else await channel.send({ embeds: [embed], components: [newMissionButtons()] });
+      const exist = messages.find(m => m.author.id === bot.user.id && m.embeds.length > 0);
+      if (exist) await exist.edit({ embeds: [embed], components: newMissionButtons() });
+      else await channel.send({ embeds: [embed], components: newMissionButtons() });
     } catch (err) {
-      log(`[missionTimer]: ${err.message}`, "error");
+      log(`[setupMissionTimer]: ${err.message}`, "error");
+    } finally {
+      updating = false;
     }
-  }
+  };
   await update();
-  setInterval(update, config.MISSION_TIMER_INTERVAL * 1000);
-  log("[missionTimer.js] registered.", "success");
+  missionInterval = setInterval(update, Math.max(config.MISSION_TIMER_INTERVAL || 60, 30) * 1000);
+  log("[setupMissionTimer] registered (memory-safe).", "success");
 };
 
 export default setupMissionTimer;

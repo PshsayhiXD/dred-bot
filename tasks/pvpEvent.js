@@ -1,63 +1,82 @@
-import { EmbedBuilder } from 'discord.js';
-import { helper }  from '../utils/helper.js';
-import config from '../config.js';
-import log from '../utils/logger.js';
+import { helper } from "../utils/helper.js";
+import { commandEmbed } from "../utils/commandComponent.js";
+import config from "../config.js";
+import log from "../utils/logger.js";
+
+let scheduledTimeouts = [];
 
 const setupPvpEvent = async (bot) => {
   const scheduleEvents = async () => {
+    for (const t of scheduledTimeouts) clearTimeout(t);
+    scheduledTimeouts = [];
     let events;
-    try { events = await helper.pvpEvent('all');
-    } catch (err) { return log(`[setupPvpEvent]: Failed to fetch PvP event schedule: ${err}.`, "error") }
-    const now = new Date(Date.now());
-    const upcoming = events.map(e => ({ date: new Date(e.date) })).filter(e => e.date > new Date());
+    try {
+      events = await helper.pvpEvent("all");
+    } catch (err) {
+      return log(`[setupPvpEvent]: Failed to fetch PvP events: ${err}`, "error");
+    }
+    const now = Date.now();
+    const upcoming = events
+      .map(e => ({ date: new Date(e.date) }))
+      .filter(e => e.date.getTime() > now);
     const channel = bot.channels.cache.get(config.PvpEventChannelID);
+    if (!channel?.isTextBased?.()) return log("[setupPvpEvent]: Invalid PvP channel.", "warn");
     for (const { date } of upcoming) {
       const startTime = date.getTime();
-      const pingTime = (startTime - 30 * 60 * 1000) - now;
+      const pingTime = startTime - 30 * 60 * 1000 - now;
       if (pingTime <= 0) continue;
-      setTimeout(async () => {
-        const unix = Math.floor(startTime / 1000);
-        const embed = new EmbedBuilder()
-          .setTitle('PvP Event Starting Soon')
-          .setDescription(`A PvP event is starting <t:${unix}:R>!\nStart time: <t:${unix}:F>`)
-          .setColor(0xff5555)
-          .setTimestamp();
+      const t = setTimeout(async () => {
         try {
+          const unix = Math.floor(startTime / 1000);
+          const embed = await commandEmbed({
+            title: "PvP Event Starting Soon",
+            description: `A PvP event is starting <t:${unix}:R>!\nStart time: <t:${unix}:F>`,
+            color: 0xff5555,
+            timestamp: true,
+          });
           const pingMessage = await channel.send({
             content: `<@&${config.PvpEventPingRoleID}>`,
             embeds: [embed],
           });
-          setTimeout(() => {
-            pingMessage.delete().catch(err => { log(`[setupPvpEvent]: Failed to delete ping message: ${err.message}.`, "warn") });
+          const deleteTimeout = setTimeout(() => {
+            pingMessage.delete().catch(err => {
+              log(`[setupPvpEvent]: Failed to delete ping message: ${err.message}`, "warn");
+            });
           }, 2 * 60 * 1000);
+          scheduledTimeouts.push(deleteTimeout);
         } catch (err) {
-          log(`[setupPvpEvent]: Failed to send or delete ping message: ${err.message}.`, "error");
+          log(`[setupPvpEvent]: Failed to send ping: ${err.message}`, "error");
         }
       }, pingTime);
+      scheduledTimeouts.push(t);
     }
-    const embed = new EmbedBuilder().setTitle('PvP Event Schedule').setColor(0x00bfff).setTimestamp();
-    for (const { date } of upcoming.slice(0, 5)) {
-      const unix = Math.floor(new Date(date).getTime() / 1000);
-      const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
-      embed.addFields({ name: dayOfWeek, value: `<t:${unix}:F> - <t:${unix}:R>`, inline: false });
+    try {
+      const embed = await commandEmbed({
+        title: "PvP Event Schedule",
+        color: 0x00bfff,
+        timestamp: true,
+        fields: upcoming.slice(0, 5).map(({ date }) => {
+          const unix = Math.floor(date.getTime() / 1000);
+          const dayOfWeek = date.toLocaleDateString("en-US", { weekday: "long" });
+          return { name: dayOfWeek, value: `<t:${unix}:F> - <t:${unix}:R>`, inline: false };
+        }),
+        footer: {
+          text: `${bot.user.username} | ${new Date().toLocaleDateString("en-GB")}`,
+          iconURL: bot.user.displayAvatarURL(),
+        },
+      });
+      const messages = await channel.messages.fetch({ limit: 10 });
+      const existing = messages.find(m => m.author.id === bot.user.id);
+      if (existing) await existing.edit({ embeds: [embed] });
+      else await channel.send({ embeds: [embed] });
+    } catch (err) {
+      log(`[setupPvpEvent]: Failed to update schedule embed: ${err.message}`, "error");
     }
-    const formattedDate = now.toLocaleDateString('en-GB', {
-      weekday: 'short',
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-    embed.setFooter({
-      text: `${bot.user.username} | ${formattedDate}`,
-      iconURL: bot.user.displayAvatarURL()
-    });
-    const messages = await channel.messages.fetch({ limit: 10 });
-    const existing = messages.find(m => m.author.id === bot.user.id);
-    if (existing) await existing.edit({ embeds: [embed] });
-    else await channel.send({ embeds: [embed] });
-    setTimeout(scheduleEvents, 24 * 60 * 60 * 1000);
+    const refreshTimeout = setTimeout(scheduleEvents, 24 * 60 * 60 * 1000);
+    scheduledTimeouts.push(refreshTimeout);
   };
   await scheduleEvents();
-  log(`[pvpEvent.js] registered.`, "success");
-}
+  log("[setupPvpEvent] registered (memory-safe).", "success");
+};
+
 export default setupPvpEvent;

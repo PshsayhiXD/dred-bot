@@ -26,10 +26,10 @@ import { getAllCommand, getDupeIdCommands } from './utils/getcommand.js';
 import log from './utils/logger.js';
 import config from './config.js';
 import { Middleware } from './middleware/app.js';
-import * as commandUsage from './commands/command-usage.js';
+import { checkMissingArgs, checkMissingPermission } from './commands/command-usage.js';
+import { commandEmbed, commandReRunButton } from './utils/commandComponent.js';
 import * as createRoute from './routes/app/index.js';
 import { helper } from './utils/helper.js';
-import paths from './utils/path.js';
 import * as db from './utils/db.js';
 import { rescheduleAll } from './utils/deleteScheduler.js';
 process.on('unhandledRejection', err => {
@@ -111,7 +111,7 @@ await (async function () {
     await setupNewJoinMember(bot);
     await setupLeavingMember(bot);
     await setupChangelogs(bot);
-    await setupMissionTimer(bot);
+    //await setupMissionTimer(bot);
     await setupShipTracker(bot);
     await rescheduleAll(bot);
     await setupCurrentVersion(bot);
@@ -137,7 +137,7 @@ await (async function () {
     let originalCommand = command;
     let commands = bot.commands?.get(command);
     if (!commands) {
-      commands = [...bot.commands.values()].find(cmd => Array.isArray(cmd.aliases) && cmd.aliases.includes(command));
+      commands = [...bot.commands?.values()].find(cmd => Array.isArray(cmd.aliases) && cmd.aliases.includes(command));
       if (commands) command = commands.name;
     }
     let username = null;
@@ -146,7 +146,7 @@ await (async function () {
     data = db.loadDataByAccountId(accountId);
     if (data && Object.keys(data).length > 0) username = helper.loadUsernameByAccountId(accountId);
     if (!data && !['login', 'anonymous', ...(commands['login']?.aliases || []), ...(commands['anonymous']?.aliases || [])].includes(command)) {
-      const embed = await commandUsage.commandEmbed({
+      const embed = await commandEmbed({
         title: '❌ Not logged in',
         description: `❌ **You are not logged in**. Please use \`${config.PREFIX}login <account> <token>\` to log in or \`${config.PREFIX}anonymous\` to use the bot as anonymously.`,
         user: `Not logged in`,
@@ -179,7 +179,7 @@ await (async function () {
         return (b.length - d(b, command)) / b.length - (a.length - d(a, command)) / a.length;
       })[0];
     if (suggestion && !commands) {
-      const embed = await commandUsage.commandEmbed({
+      const embed = await commandEmbed({
         title: `❌ Command not found`,
         description: `**Command**: \`${command}\`\n**Did you mean**: \`${suggestion}\`?`,
         color: '#FF0000',
@@ -193,15 +193,15 @@ await (async function () {
     const timeLeft = ms => {
       return helper.formatTime(ms);
     };
-    const missingPerm = await commandUsage.checkMissingPermission(username, command, bot, helper.Permission);
-    const missingArgs = commandUsage.checkMissingArgs(command, bot, { args, attachments: message.attachments.toJSON() });
+    const missingPerm = await checkMissingPermission(username, command, bot, helper.Permission);
+    const missingArgs = checkMissingArgs(command, bot, { args, attachments: message.attachments.toJSON() });
     let cooldownResult = null;
     let globalCooldownResult = null;
     try {
       cooldownResult = await helper.Cooldown(username, command);
       if (!cooldownResult) await helper.newCooldown(username, command, commands.cooldown);
       else {
-        const embed = await commandUsage.commandEmbed({ title: `⏳ Cooldown`, description: `You must wait **${await timeLeft(cooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`, user: username, reward: false, message });
+        const embed = await commandEmbed({ title: `⏳ Cooldown`, description: `You must wait **${await timeLeft(cooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`, user: username, reward: false, message });
         return message.reply({ embeds: [embed] });
       }
     } catch (err) {
@@ -211,7 +211,7 @@ await (async function () {
       globalCooldownResult = await helper.GlobalCooldown(username, command);
       if (!globalCooldownResult) await helper.newGlobalCooldown(username, command, commands.globalCooldown);
       else {
-        const embed = await commandUsage.commandEmbed({
+        const embed = await commandEmbed({
           title: `⏳ Global Cooldown`,
           description: `You have recently used this command. Please wait **${await timeLeft(globalCooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`,
           user: username,
@@ -224,11 +224,11 @@ await (async function () {
       await helper.newGlobalCooldown(username, command, commands.globalCooldown);
     }
     if (missingPerm) {
-      const embed = await commandUsage.commandEmbed({ title: `❌ Permission Denied`, description: missingPerm, user: username, reward: false, message });
+      const embed = await commandEmbed({ title: `❌ Permission Denied`, description: missingPerm, user: username, reward: false, message });
       return message.reply({ embeds: [embed] });
     }
     if (missingArgs) {
-      const embed = await commandUsage.commandEmbed({ title: `❌ Invalid Usage`, description: missingArgs, user: username, reward: false, message });
+      const embed = await commandEmbed({ title: `❌ Invalid Usage`, description: missingArgs, user: username, reward: false, message });
       return message.reply({ embeds: [embed] });
     }
     try {
@@ -237,7 +237,7 @@ await (async function () {
       message.reply = async (...replyArgs) => {
         const res = await originalReply(...replyArgs);
         try {
-          const rerunBtn = commandUsage.commandReRunButton(bot, message, command, args);
+          const rerunBtn = commandReRunButton(bot, message, command, args);
           if (rerunBtn) {
             const existingComponents = res.components || [];
             existingComponents.push({ type: 1, components: [rerunBtn] });
@@ -248,10 +248,12 @@ await (async function () {
         }
         return res;
       };
+      data = await db.loadData(username);
+      data.command_execute = (data.command_execute || 0) + 1;
+      await db.saveData(username, data);
       try {
-        data.command_execute++;
-        await db.saveData(username, data)
         await commands.execute(message, args, username, originalCommand, dependencies);
+        data = await db.loadData(username)
       } finally {
         message.reply = originalReply;
       }

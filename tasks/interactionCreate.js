@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { helper }  from '../utils/helper.js';
 import log from '../utils/logger.js';
-import { votes, voters, lastState, newMissionButtons } from './missionTimer.js';
+//import { vote, newMissionButtons } from './missionTimer.js';
 import { scheduleDelete } from '../utils/deleteScheduler.js';
 import { saveSubmittedLinks, submittedLinks } from './shipTracker.js';
 import config from '../config.js';
@@ -244,16 +244,12 @@ const handleInteractionCreate = (bot) => {
         }
       }
 
-      // Mission votes
+      /* Mission votes
       if (interaction.isButton() && ["vote_pits", "vote_canary", "vote_vulture"].includes(interaction.customId)) {
-        if (lastState !== "OPEN") return;
-        if (voters.has(interaction.user.id)) return;
         const key = interaction.customId.split("_")[1];
-        votes[key]++;
-        voters.add(interaction.user.id);
-        await interaction.update({ components: [newMissionButtons()] });
+        if (vote(interaction.user.id, key, lastState)) await interaction.update({ components: newMissionButtons() });
       }
-
+      */
       // Ship tracker Download JSON
       if (interaction.isButton() && interaction.customId === "shiptracker_download_json") {
         const data = await helper.fetchShipList();

@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import { commandEmbed } from "../utils/commandComponent.js";
 import { version } from "../version.js";
 import config from "../config.js";
 import log from "../utils/logger.js";
@@ -12,12 +12,13 @@ const setupCurrentVersion = async (bot) => {
   try {
     const summary = await version();
     log(`[currentVersion.js] ${summary}`, "success");
-    const embed = new EmbedBuilder()
-      .setTitle("📦 Current Version")
-      .setDescription("```" + summary + "```")
-      .setColor(0x57f287)
-      .setTimestamp()
-      .setFooter({ text: "Version Manager." });
+    const embed = await commandEmbed({
+      title: "📦 Current Version",
+      description: `\`\`\`${summary}\`\`\``,
+      color: 0x57f287,
+      footer: { text: "Version Manager." },
+      timestamp: true
+    });
     const msgs = await ch.messages.fetch({ limit: 5 });
     const last = msgs.find(m => m.author.id === bot.user.id && m.embeds.length);
     if (last) {

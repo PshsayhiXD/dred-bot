@@ -2,7 +2,7 @@ import { EmbedBuilder } from "discord.js";
 import { helper } from "../utils/helper.js";
 import config from "../config.js";
 import log from "../utils/logger.js";
-import { commandLinkButton } from "../commands/command-usage.js";
+import { commandLinkButton } from "../utils/commandComponent.js";
 const NGROK = await helper.getNgrokUrl();
 export const sendDashboardEmbed = async client => {
   try {

@@ -1,5 +1,5 @@
-import { EmbedBuilder } from "discord.js";
-import log from '../utils/logger.js';
+import { commandEmbed } from "../utils/commandComponent.js";
+import log from "../utils/logger.js";
 import config from "../config.js";
 
 const setupNewJoinMember = async (bot) => {
@@ -16,39 +16,21 @@ const setupNewJoinMember = async (bot) => {
     }
     const welcomeChannel = member.guild.channels.cache.get(welcomeChannelId);
     if (!welcomeChannel?.isTextBased?.()) return;
-    const embed = new EmbedBuilder()
-      .setColor(0x57f287)
-      .setTitle("👋 Welcome aboard!")
-      .setDescription(`Hey <@${member.id}>, welcome to **${member.guild.name}**!`)
-      .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-      .addFields(
-        {
-          name: "Member",
-          value: `**Tag:** \`${member.user.tag} (${member.id})\``,
-          inline: true
-        },
-        {
-          name: "📆 Joined",
-          value: `<t:${Math.floor(Date.now() / 1000)}:R>`,
-          inline: true
-        },
-        {
-          name: "📊 Server Stats",
-          value: `**Total Members:** ${member.guild.memberCount}`,
-          inline: true
-        },
-        {
-          name: "📖 Start Here",
-          value: `- Check out <#${config.RulesChannelID}> to get started.`,
-          inline: false
-        },
-        {
-          name: "🔗 Useful Channels",
-          value: `<#1343918179893903454> • <#1342150282842341416> • <#1342150461905567796> • <#1354075235552464897>.`,
-          inline: false
-        }
-      ).setFooter({ text: `Welcome ${member.user.username}!`, iconURL: member.user.displayAvatarURL({ dynamic: true }) })
-      .setTimestamp();
+    const embed = await commandEmbed({
+      title: "👋 Welcome aboard!",
+      description: `Hey <@${member.id}>, welcome to **${member.guild.name}**!`,
+      color: 0x57f287,
+      thumbnail: member.user.displayAvatarURL({ dynamic: true }),
+      fields: [
+        { name: "Member", value: `**Tag:** \`${member.user.tag} (${member.id})\``, inline: true },
+        { name: "📆 Joined", value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
+        { name: "📊 Server Stats", value: `**Total Members:** ${member.guild.memberCount}`, inline: true },
+        { name: "📖 Start Here", value: `- Check out <#${config.RulesChannelID}> to get started.`, inline: false },
+        { name: "🔗 Useful Channels", value: `<#1343918179893903454> • <#1342150282842341416> • <#1342150461905567796> • <#1354075235552464897>.`, inline: false }
+      ],
+      footer: { text: `Welcome ${member.user.username}!`, iconURL: member.user.displayAvatarURL({ dynamic: true }) },
+      timestamp: true
+    });
     welcomeChannel.send({ embeds: [embed] }).catch(() => {});
   });
   const guild = bot.guilds.cache.get(config.GUILD_ID);
