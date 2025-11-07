@@ -1,7 +1,6 @@
 import fs from 'fs/promises';
 import dns from 'dns';
 import os from 'os';
-import { exec } from "child_process";
 import path from 'path';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../../.env' });
@@ -15,10 +14,8 @@ import * as cheerio from 'cheerio';
 import { createCanvas, loadImage } from 'canvas';
 import { DateTime } from "luxon";
 import argon2 from 'argon2';
-
 import paths from './path.js';
 import config from '../config.js';
-import * as commandUsage from '../commands/command-usage.js';
 import * as getcommand from './getcommand.js';
 import log from './logger.js';
 
@@ -923,7 +920,7 @@ export const drawShipsCard = selfWrap(async function drawShipsCard(ships, update
   let boxHeight = defaultBoxHeight;
   if (totalContentHeight > maxHeight) boxHeight = Math.floor((maxHeight - 100 - ships.length * padding) / ships.length);
   const canvasHeight = Math.min(maxHeight, totalContentHeight);
-  const canvas = Canvas.createCanvas(width, canvasHeight);
+  const canvas = createCanvas(width, canvasHeight);
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#1e1e1e';
   ctx.fillRect(0, 0, width, canvasHeight);
@@ -1046,85 +1043,29 @@ export const getFutureMission = selfWrap(async function getFutureMission(count =
 
 export const getDrednotLeaderboard = selfWrap(async function getDrednotLeaderboard(category, by = 'pilot', page = 1, formatter = 'formatDrednotLeaderboard') {
   const Map = {
-    archives: 'archive',
-    archived: 'archive',
-    'archived categories ⇒': 'archive',
-    'old categories': 'archive',
-    'past categories': 'archive',
-    history: 'archive',
-    bots: 'bots',
-    bot: 'bots',
-    'bot kills': 'bots',
-    'regular pve bots': 'bots',
-    'regular bot kills': 'bots',
-    'pve bots': 'bots',
-    coward: 'boss_coward',
-    'coward kills': 'boss_coward',
-    'coward pve': 'boss_coward',
-    'coward boss': 'boss_coward',
-    lazer: 'boss_lazer',
-    'lazer kills': 'boss_lazer',
-    'lazer pve': 'boss_lazer',
-    laser: 'boss_lazer',
-    'laser kills': 'boss_lazer',
-    shield: 'boss_shield',
-    'shield kills': 'boss_shield',
-    'shield pve': 'boss_shield',
-    'shield boss': 'boss_shield',
-    'pvp wins': 'pvp_elimination_wins',
-    'pvp win': 'pvp_elimination_wins',
-    'pvp elim wins': 'pvp_elimination_wins',
-    'pvp: elimination wins': 'pvp_elimination_wins',
-    'pvp elimination': 'pvp_elimination_wins',
-    'pvp loot': 'pvp_elimination_loot',
-    'pvp loot elim': 'pvp_elimination_loot',
-    'pvp: elimination loot': 'pvp_elimination_loot',
-    'pvp elim loot': 'pvp_elimination_loot',
-    loot: 'pvp_elimination_loot',
-    'loot wins': 'pvp_elimination_loot',
+    archives: 'archive', archived: 'archive', 'archived categories ⇒': 'archive', 'old categories': 'archive', 'past categories': 'archive', history: 'archive',
+    bots: 'bots', bot: 'bots', 'bot kills': 'bots', 'regular pve bots': 'bots', 'regular bot kills': 'bots', 'pve bots': 'bots',
+    coward: 'boss_coward', 'coward kills': 'boss_coward', 'coward pve': 'boss_coward', 'coward boss': 'boss_coward',
+    lazer: 'boss_lazer', 'lazer kills': 'boss_lazer', 'lazer pve': 'boss_lazer', laser: 'boss_lazer', 'laser kills': 'boss_lazer',
+    shield: 'boss_shield', 'shield kills': 'boss_shield', 'shield pve': 'boss_shield', 'shield boss': 'boss_shield',
+    'pvp wins': 'pvp_elimination_wins', 'pvp win': 'pvp_elimination_wins', 'pvp elim wins': 'pvp_elimination_wins', 'pvp: elimination wins': 'pvp_elimination_wins', 'pvp elimination': 'pvp_elimination_wins',
+    'pvp loot': 'pvp_elimination_loot', 'pvp loot elim': 'pvp_elimination_loot', 'pvp: elimination loot': 'pvp_elimination_loot', 'pvp elim loot': 'pvp_elimination_loot', loot: 'pvp_elimination_loot', 'loot wins': 'pvp_elimination_loot'
   };
   const cat = Map[category?.toLowerCase()];
-  if (!cat)
-    return errorMsg(this.name, `Invalid category.`, 0);
+  if (!cat) return errorMsg(this.name, `Invalid category.`, 0);
   const statusPath = paths.database.scrape_do;
   const cachePath = paths.database.leaderboardCache;
   const cacheKey = `${cat}_${by}_${page}`;
-  let state,
-    cache = {};
-  try {
-    state = JSON.parse(await fs.readFile(statusPath, 'utf-8'));
-  } catch {
-    state = { started: Date.now(), resetAt: Date.now() + 32 * 24 * 60 * 60 * 1000, used: 0, limit: 1000, fetch: 0, success: 0, errors: 0, lastFetch: null, next: null, avgIntervalMs: null };
-  }
-  try {
-    cache = JSON.parse(await fs.readFile(cachePath, 'utf-8'));
-  } catch {
-    cache = {};
-  }
-  if (cache[cacheKey] && Date.now() - cache[cacheKey].ts < 24 * 60 * 60 * 1000) return cache[cacheKey].data;
-  if (Date.now() > state.resetAt) {
-    state.started = Date.now();
-    state.resetAt = Date.now() + 32 * 24 * 60 * 60 * 1000;
-    state.used = 0;
-    state.fetch = 0;
-    state.success = 0;
-    state.errors = 0;
-    state.lastFetch = null;
-    state.next = null;
-    state.avgIntervalMs = null;
-  }
-  if (state.next && Date.now() < state.next)
-    return errorMsg(this.name, `Rate limited. Try again in ${formatTime(state.next - Date.now())}.`, 0);
-  if (state.used + 5 > state.limit)
-    return successMsg(this.name, `API credit limit reached.`, 0);
-  const proxy = 'https://api.scrape.do/?' + `token=${readEnv('SCRAPE_DO_API_KEY')}` + '&url=' + encodeURIComponent(`https://drednot.io/leaderboard?cat=${cat}&by=${by}&p=${page}`) + '&render=true';
-  const checkFetchLimits = (fetchPerMin, fetchPerDay, maxPerMin = 60, maxPerDay = state.limit) => {
-    if (fetchPerMin > maxPerMin)
-      return errorMsg(this.name, `Rate limit per minute exceeded (${fetchPerMin}/${maxPerMin}).`, 0);
-    if (fetchPerDay > maxPerDay)
-      return errorMsg(this.name, `Rate limit per day exceeded (${fetchPerDay}/${maxPerDay}).`, 0);
-    return successMsg(this.name, ``, 0);
-  };
+  let state = {}, cache = {};
+  try { state = JSON.parse(await fs.readFile(statusPath, 'utf-8')); } 
+  catch { state = { started: Date.now(), resetAt: Date.now() + 32*24*60*60*1000, used: 0, limit: 1000, fetch: 0, success: 0, errors: 0, lastFetch: null, next: null, avgIntervalMs: null, remaining: 1000 }; }
+  try { cache = JSON.parse(await fs.readFile(cachePath, 'utf-8')); } 
+  catch { cache = {}; }
+  if (cache[cacheKey] && Date.now() - cache[cacheKey].ts < 24*60*60*1000) return cache[cacheKey].data;
+  if (Date.now() > state.resetAt) state = { started: Date.now(), resetAt: Date.now() + 32*24*60*60*1000, used: 0, limit: 1000, fetch: 0, success: 0, errors: 0, lastFetch: null, next: null, avgIntervalMs: null, remaining: 1000 };
+  if (state.next && Date.now() < state.next) return errorMsg(this.name, `Rate limited. Try again in ${formatTime(state.next - Date.now())}.`, 0);
+  if (state.used + 5 > state.limit) return successMsg(this.name, `API credit limit reached.`, 0);
+  const proxy = `https://api.scrape.do/?token=${readEnv('SCRAPE_DO_API_KEY')}&url=${encodeURIComponent(`https://drednot.io/leaderboard?cat=${cat}&by=${by}&p=${page}`)}&render=true`;
   try {
     const res = await fetch(proxy);
     const html = await res.text();
@@ -1132,25 +1073,16 @@ export const getDrednotLeaderboard = selfWrap(async function getDrednotLeaderboa
     state.used += 5;
     state.success++;
     state.lastFetch = Date.now();
-    const elapsed = state.lastFetch - state.started || 1;
-    const now = new Date();
-    const elapsedMin = (now - (state.lastFetch || now)) / 60000 || 1;
-    const maxPerDay = state.limit - state.used;
-    const remainingDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
-    const maxPerMin = maxPerDay / (remainingDays * 24 * 60);
-    state.avgIntervalMs = Math.round(elapsed / state.fetch);
-    state.next = now + (fetchPerMin > maxPerMin ? 60000 : 0);
     state.remaining = state.limit - state.used;
-    const fetchPerMin = state.fetch / elapsedMin;
-    const fetchPerDay = fetchPerMin * 1440;
-    const limitCheck = checkFetchLimits(fetchPerMin, fetchPerDay);
-    if (!limitCheck.ok) return limitCheck;
-    const out = { ok: true, ts: Date.now(), page, category: cat, by, cred: `${state.used}/${state.limit}`, remaining: state.remaining, fetchPerMin, fetchPerDay, nextAt: state.next, html };
+    state.avgIntervalMs = Math.round((state.lastFetch - state.started) / state.fetch) || 0;
+    const now = Date.now();
+    state.next = now + (state.used >= state.limit ? 60000 : 0);
+    const out = { ok: true, ts: Date.now(), page, category: cat, by, cred: `${state.used}/${state.limit}`, remaining: state.remaining, html };
     cache[cacheKey] = { ts: Date.now(), data: out };
     await fs.writeFile(cachePath, JSON.stringify(cache, null, 2));
     await fs.writeFile(statusPath, JSON.stringify(state, null, 2));
     if (formatter === 'formatDrednotLeaderboard') return formatDrednotLeaderboard(out, by);
-    else if (typeof formatter === 'function') return formatter(out, by);
+    if (typeof formatter === 'function') return formatter(out, by);
     return out;
   } catch (e) {
     state.errors++;
@@ -1235,28 +1167,39 @@ export const searchSpotify = selfWrap(async function searchSpotify(songName, art
   return data.tracks.items;
 });
 export const resolveDependencies = selfWrap(async function resolveDependencies(depStr, message) {
+  if (typeof depStr !== 'string' || !depStr.trim()) return {};
   const dep = {};
-  if (typeof depStr !== 'string' || !depStr.trim()) return dep;
-  const deps = depStr.trim().split(/\s+/);
-  for (const name of deps) {
-    if (name === 'helper') dep.helper = helper;
-    else if (name === 'config') dep.config = config;
-    else if (name === 'message') dep.message = message;
-    else if (name === 'commandUsage') dep.commandUsage = commandUsage;
-    else if (name === 'clan') dep.clan = clan;
-    else if (name === 'marketplace') dep.marketplace = marketplace;
-    else if (name === 'paths') dep.paths = paths;
-    else if (name === 'deleteSchedule') dep.deleteSchedule = deleteSchedule;
-    else if (name === 'trade') dep.trade = trade;
-    else if (config?.[name] && (name.startsWith('config.') || name.startsWith('c.') || name.startsWith('.'))) dep[name] = config[name];
-    else if (helper?.[name]) dep[name] = helper[name];
-    else if (clan?.[name]) dep[name] = clan[name];
-    else if (marketplace?.[name]) dep[name] = marketplace[name];
-    else if (commandUsage?.[name]) dep[name] = commandUsage[name];
-    else if (getcommand?.[name]) dep[name] = getcommand[name];
-    else if (deleteSchedule?.[name]) dep[name] = deleteSchedule[name];
-    else if (trade?.[name]) dep[name] = trade[name];
-    else throwError(`${this.name}`, `Unknown dependency '${name}'`);
+  const topLevelDeps = {
+    helper,
+    config,
+    message,
+    clan,
+    marketplace,
+    paths,
+    deleteSchedule,
+    trade,
+    getcommand
+  };
+  const fallbackModules = [
+    config, helper, clan,
+     marketplace, getcommand, 
+     deleteSchedule, trade
+    ];
+  const resolvePath = (obj, path) => {
+    return path.split('.').reduce((o, key) => (o?.[key] !== undefined ? o[key] : undefined), obj);
+  };
+  for (const rawName of depStr.trim().split(/\s+/)) {
+    const [moduleName, ...nestedPath] = rawName.split('.');
+    let value;
+    if (topLevelDeps[moduleName]) value = nestedPath.length ? resolvePath(topLevelDeps[moduleName], nestedPath.join('.')) : topLevelDeps[moduleName];
+    if (value === undefined) {
+      for (const mod of fallbackModules) {
+        value = resolvePath(mod, rawName);
+        if (value !== undefined) break;
+      }
+    }
+    if (value === undefined) throwError(`${this.name}`, `Unknown dependency '${rawName}'`);
+    dep[rawName] = value;
   }
   return dep;
 });
@@ -2443,101 +2386,72 @@ export const getCooldownBoost = selfWrap(async function getCooldownBoost(user) {
     boosts: activeBoosts,
   });
 });
+export const resolveCooldown = selfWrap(async function resolveCooldown(cooldown, user, data) {
+  if (typeof cooldown === "function") {
+    const val = await cooldown(user, data);
+    return successMsg(this.name, ``, { cooldown: val, user });
+  }
+  return successMsg(this.name, ``, { cooldown, user });
+});
 export const newCooldown = selfWrap(async function newCooldown(user, command, seconds) {
-  if (!command || isNaN(seconds)) throwError(`${this.name}`, `Invalid arguments.`);
   if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
   await initUserObject(user);
+  const data = await loadData(user);
+  const resolved = (await resolveCooldown(command.cooldown ?? seconds, user, data)).cooldown;
+  const sec = Number(resolved);
+  if (isNaN(sec)) throwError(`${this.name}`, `Invalid cooldown value: ${resolved}`);
   const now = Date.now();
-  if (seconds <= 0)
-    return successMsg(this.name, ``, {
-      setAt: now,
-      duration: 0,
-      expires: now,
-    });
+  if (sec <= 0) return successMsg(this.name, ``, { setAt: now, duration: 0, expires: now });
   cooldowns = cooldowns || {};
   if (!cooldowns[user]) cooldowns[user] = {};
-  const baseDuration = seconds * 1000;
-  let duration = baseDuration;
+  const baseDuration = sec * 1000;
   const skillBoosts = await applySkillBoosts(user);
   const extraCooldown = skillBoosts?.bonusCooldown ?? 0;
   const reducedCooldown = skillBoosts?.debuffCooldown ?? 0;
-  duration = baseDuration + extraCooldown - reducedCooldown;
+  let duration = baseDuration + extraCooldown - reducedCooldown;
   if (duration < 500) duration = 500;
-  cooldowns[user][command] = {
-    setAt: now,
-    duration,
-    expires: now + duration,
-  };
-  return successMsg(this.name, ``, {
-    user,
-    command,
-    baseDuration,
-    finalDuration: duration,
-    expire: now + duration,
-    extraCooldown,
-    reducedCooldown,
-  });
+  cooldowns[user][command] = { setAt: now, duration, expires: now + duration };
+  return successMsg(this.name, ``, { user, command, baseDuration, finalDuration: duration, expire: now + duration });
 });
 export const newGlobalCooldown = selfWrap(async function newGlobalCooldown(user, command, seconds) {
   if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
   await initUserObject(user);
-  if (isNaN(seconds)) throwError(`${this.name}`, `seconds (${seconds}) Not a number.`);
+  const data = await loadData(user);
+  const resolved = (await resolveCooldown(command.globalCooldown ?? seconds, user, data)).cooldown;
+  const sec = Number(resolved);
+  if (isNaN(sec)) throwError(`${this.name}`, `Invalid global cooldown value: ${resolved}`);
   const now = Date.now();
-  if (seconds <= 0)
-    return successMsg(this.name, ``, {
-      user,
-      expires: now,
-      setAt: now,
-    });
-  let data = await loadData(user);
-  if (!data) data = {};
+  if (sec <= 0) return successMsg(this.name, ``, { user, expires: now, setAt: now });
   if (!data.globalCooldown) data.globalCooldown = {};
-  data.globalCooldown[command] = {
-    expires: now + seconds * 1000,
-    setAt: now,
-  };
+  data.globalCooldown[command] = { expires: now + sec * 1000, setAt: now };
   await saveData(user, data);
-  return successMsg(this.name, ``, {
-    user,
-    expires: now + seconds * 1000,
-    setAt: now,
-  });
+  return successMsg(this.name, ``, { user, expires: now + sec * 1000, setAt: now });
 });
 export const Cooldown = selfWrap(async function Cooldown(user, command) {
   if (!(await isValidUser(user))) return false;
   await initUserObject(user);
+  const data = await loadData(user);
   const cd = cooldowns?.[user]?.[command];
-  if (!cd || typeof cd.expires !== 'number') return false;
+  if (!cd || typeof cd.expires !== "number") return false;
   const now = Date.now();
   const { active, multiplier } = await getCooldownBoost(user);
-  if (active && cd.setAt && cd.duration) {
-    const adjustedDuration = cd.duration / multiplier;
+  const duration = (await resolveCooldown(command.cooldown, user, data)).cooldown;
+  if (active && cd.setAt && duration) {
+    const adjustedDuration = (cd.duration ?? duration * 1000) / multiplier;
     const endTime = cd.setAt + adjustedDuration;
     const remaining = Math.max(0, endTime - now);
     if (remaining <= 0) {
       delete cooldowns[user][command];
       return false;
     }
-    return successMsg(this.name, ``, {
-      user,
-      command,
-      remaining,
-      expires: endTime,
-      claimableAt: new Date(endTime),
-    });
+    return successMsg(this.name, ``, { user, command, remaining, expires: endTime, claimableAt: new Date(endTime) });
   }
   const remaining = cd.expires - now;
   if (remaining <= 0) {
     delete cooldowns[user][command];
     return false;
   }
-  return successMsg(this.name, ``, {
-    user,
-    command,
-    remaining,
-    expires: cd.expires,
-    claimableAt: new Date(cd.expires),
-  });
+  return successMsg(this.name, ``, { user, command, remaining, expires: cd.expires, claimableAt: new Date(cd.expires) });
 });
 export const GlobalCooldown = selfWrap(async function GlobalCooldown(user, command) {
   if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
@@ -2546,8 +2460,9 @@ export const GlobalCooldown = selfWrap(async function GlobalCooldown(user, comma
   const cd = data?.globalCooldown?.[command];
   if (!cd) return false;
   const now = Date.now();
-  const { active, multiplier, start, duration } = await getCooldownBoost(user);
-  if (active && cd.setAt) {
+  const { active, multiplier } = await getCooldownBoost(user);
+  const duration = (await resolveCooldown(command.globalCooldown, user, data)).cooldown;
+  if (active && cd.setAt && duration) {
     const elapsed = now - cd.setAt;
     const boosted = elapsed * multiplier;
     const remaining = Math.max(0, cd.expires - (cd.setAt + boosted));
@@ -2556,13 +2471,7 @@ export const GlobalCooldown = selfWrap(async function GlobalCooldown(user, comma
       await saveData(user, data);
       return false;
     }
-    return successMsg(this.name, ``, {
-      user,
-      command,
-      remaining,
-      expires: now + remaining,
-      claimableAt: new Date(now + remaining),
-    });
+    return successMsg(this.name, ``, { user, command, remaining, expires: now + remaining, claimableAt: new Date(now + remaining) });
   }
   const remaining = cd.expires - now;
   if (remaining <= 0) {
@@ -2570,13 +2479,7 @@ export const GlobalCooldown = selfWrap(async function GlobalCooldown(user, comma
     await saveData(user, data);
     return false;
   }
-  return successMsg(this.name, ``, {
-    user,
-    command,
-    remaining,
-    expires: cd.expires,
-    claimableAt: new Date(cd.expires),
-  });
+  return successMsg(this.name, ``, { user, command, remaining, expires: cd.expires, claimableAt: new Date(cd.expires) });
 });
 export const resetAllCooldowns = selfWrap(async function resetAllCooldowns(user) {
   if (!cooldowns[user]) throwError(`${this.name}`, `User ${user} not found.`);
