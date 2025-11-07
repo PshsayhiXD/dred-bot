@@ -4,7 +4,9 @@ certs/
 .vscode/
 .stfolder
 .env
+ae.py
 database/
 command-prompt/
 config.js
 misc/
+extension/
