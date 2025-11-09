@@ -76,7 +76,7 @@ const setupPvpEvent = async (bot) => {
     scheduledTimeouts.push(refreshTimeout);
   };
   await scheduleEvents();
-  log("[setupPvpEvent] registered (memory-safe).", "success");
+  log("[setupPvpEvent] registered.", "success");
 };
 
 export default setupPvpEvent;

@@ -3,13 +3,12 @@ import path from "path";
 import config from "../config.js";
 import paths from "../utils/path.js";
 import log from "../utils/logger.js";
-import { AttachmentBuilder } from "discord.js";
-import { commandButtonComponent, commandSelectComponent, commandEmbed } from "../utils/commandComponent.js";
-import { fetchShipList, fetchShipFromLink, drawShipsCard } from '../utils/helper.js';
+import { drawShipsCard, fetchShipList, fetchShipFromLink } from "../utils/helper.js";
+import { commandButtonComponent, commandSelectComponent, sendChunks, commandAttachment } from "../utils/commandComponent.js";
 
 const activeship = paths.database.active_ship;
 export let submittedLinks = new Map();
-let trackerMessage = null;
+
 export const loadSubmittedLinks = () => {
   try {
     if (!fs.existsSync(activeship)) return;
@@ -21,6 +20,7 @@ export const loadSubmittedLinks = () => {
     log(`[shipTracker.js] failed to load submitted links: ${err.message}`, "error");
   }
 };
+
 export const saveSubmittedLinks = () => {
   try {
     const obj = Object.fromEntries(submittedLinks);
@@ -30,25 +30,39 @@ export const saveSubmittedLinks = () => {
     log(`[shipTracker.js] failed to save submitted links: ${err.message}`, "error");
   }
 };
-const setupShipTracker = async (bot) => {
+
+const setupShipTracker = async bot => {
+  if (global.shipTrackerRunning) return;
+  global.shipTrackerRunning = true;
   loadSubmittedLinks();
   const channel = await bot.channels.fetch(config.ShipTrackerChannelID);
-  if (!channel?.isTextBased()) return log('[setupShipTracker]: Invalid channel.', 'warn');
-  const update = async () => {
+  if (!channel?.isTextBased()) return log("[setupShipTracker]: Invalid channel.", "warn");
+  async function update() {
+    const data = await fetchShipList();
+    if (!data) return;
     try {
-      const data = await fetchShipList();
-      if (!data) return;
+      let fetched;
+      do {
+        fetched = await channel.messages.fetch({ limit: 2 });
+        if (fetched.size > 0) await channel.bulkDelete(fetched, true);
+      } while (fetched.size >= 2);
+      if (!data.ships || Object.keys(data.ships).length === 0)
+        return await channel.send("No ships online. _Empty skies_");
       const sortedShips = [
-        ...Object.entries(data.ships || {}).map(([id, ship], idx) => ({ ...ship, ship_id: id, ourId: idx + 1 })),
+        ...Object.entries(data.ships).map(([id, ship], idx) => ({
+          ...ship,
+          ship_id: id,
+          ourId: idx + 1,
+        })),
         ...[...submittedLinks.entries()]
           .filter(([_, v]) => v.valid && v.data?.shipName)
           .map(([link, v], idx) => ({
             shipName: v.data.shipName,
             shipLink: link,
             ship_id: null,
-            ourId: Object.keys(data.ships || {}).length + idx + 1,
-            color: 'rgb(100,100,100)',
-          }))
+            ourId: Object.keys(data.ships).length + idx + 1,
+            color: "rgb(100,100,100)",
+          })),
       ].sort((a, b) => {
         if (a.player_count != null && b.player_count != null) return a.player_count - b.player_count;
         if (a.player_count != null) return -1;
@@ -61,42 +75,56 @@ const setupShipTracker = async (bot) => {
         data.max_player_count ? data.total_player_count : undefined,
         data.max_player_count ? data.max_player_count : undefined
       );
-      const attachment = new AttachmentBuilder(canvas.toBuffer('image/png'), { name: 'ships.png' });
+      const attachment = await commandAttachment(canvas.toBuffer("image/png"), "ships.png");
       const ts = Math.floor(Date.now() / 1000);
       const submittedOptions = [...submittedLinks.entries()]
         .filter(([_, v]) => v.valid && v.data?.shipName)
-        .slice(0, 25)
-        .map(([link, v]) => ({ label: v.data.shipName, description: link, value: link }));
-      const buttonRows = await commandButtonComponent([
-        { customId: 'shiptracker_download_json', label: '⬇️ Download JSON', style: 2 },
-        { customId: 'shiptracker_search', label: '🔍 Search Ship', style: 1 },
-        { customId: 'shiptracker_submit', label: '🚀 Submit Ship Link', style: 1 }
+        .map(([link, v]) => ({
+          label: v.data.shipName,
+          description: link,
+          value: link,
+        }));
+
+      const baseButtons = await commandButtonComponent([
+        { label: "⬇️ Download JSON", style: 2, customId: "shiptracker_download_json" },
+        { label: "🔍 Search Ship", style: 1, customId: "shiptracker_search" },
+        { label: "🚀 Submit Ship Link", style: 1, customId: "shiptracker_submit" },
       ]);
-      let selectRows = [];
+
+      const components = [...baseButtons];
       if (submittedOptions.length > 0) {
-        selectRows = await commandSelectComponent([{
-          placeholder: '📜 Submitted Ships',
+        const selectMenus = await commandSelectComponent({
+          customId: "shiptracker_submitted_ships",
+          placeholder: "📜 Submitted Ships",
           options: [
-            { label: 'Last Refresh', value: 'last_refresh', description: new Date().toLocaleString(), default: true },
-            ...submittedOptions
-          ]
-        }]);
+            {
+              label: "Last Refresh",
+              description: new Date().toLocaleString(),
+              value: "last_refresh",
+              default: true,
+            },
+            ...submittedOptions,
+          ],
+        });
+        components.push(...selectMenus);
       }
-      const messagePayload = {
-        content: `<t:${ts}:R>`,
+
+      await sendChunks(channel, {
+        embeds: [],
         files: [attachment],
-        components: [...buttonRows, ...selectRows]
-      };
-      if (trackerMessage) await trackerMessage.edit(messagePayload);
-      else trackerMessage = await channel.send(messagePayload);
+        components,
+        content: `<t:${ts}:R>`,
+      }, false);
     } catch (err) {
-      log(`[shipTracker.js]: ${err.stack}`, 'error');
+      log(`[shipTracker.js]: ${err.message}`, "error");
     }
-  };
+  }
+
   setInterval(async () => {
     for (const [link] of submittedLinks) {
       const data = await fetchShipFromLink(link);
-      submittedLinks.set(link, { valid: !!data, data: data || null });
+      if (!data) submittedLinks.set(link, { valid: false, data: null });
+      else submittedLinks.set(link, { valid: true, data });
     }
     saveSubmittedLinks();
   }, config.SHIP_LINK_REFRESH_INTERVAL * 1000);

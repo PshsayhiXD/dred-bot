@@ -29,7 +29,7 @@ const setupRegionTimer = async (bot) => {
   };
   await update();
   regionInterval = setInterval(update, config.REGIONAL_TIMER_INTERVAL * 60_000);
-  log(`[regionTimer.js] registered (memory-safe).`, "success");
+  log(`[regionTimer.js] registered.`, "success");
 };
 
 export default setupRegionTimer;

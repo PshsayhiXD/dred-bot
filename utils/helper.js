@@ -16,6 +16,8 @@ import { DateTime } from "luxon";
 import argon2 from 'argon2';
 import paths from './path.js';
 import config from '../config.js';
+import * as commandUsage from '../commands/command-usage.js';
+import * as commandComponent from './commandComponent.js';
 import * as getcommand from './getcommand.js';
 import log from './logger.js';
 
@@ -1174,6 +1176,8 @@ export const resolveDependencies = selfWrap(async function resolveDependencies(d
     config,
     message,
     clan,
+    commandUsage,
+    commandComponent,
     marketplace,
     paths,
     deleteSchedule,
@@ -1182,9 +1186,10 @@ export const resolveDependencies = selfWrap(async function resolveDependencies(d
   };
   const fallbackModules = [
     config, helper, clan,
-     marketplace, getcommand, 
-     deleteSchedule, trade
-    ];
+    commandUsage, commandComponent,
+    marketplace, getcommand, 
+    deleteSchedule, trade
+  ];
   const resolvePath = (obj, path) => {
     return path.split('.').reduce((o, key) => (o?.[key] !== undefined ? o[key] : undefined), obj);
   };

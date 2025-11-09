@@ -1,4 +1,10 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder } from 'discord.js';
+import { 
+  EmbedBuilder, ActionRowBuilder, 
+  ButtonBuilder, ButtonStyle, 
+  StringSelectMenuBuilder, 
+  ModalBuilder, TextInputBuilder,
+  AttachmentBuilder
+} from 'discord.js';
 import config from '../config.js';
 import log from '../utils/logger.js';
 import { registerButtonHandlers, registerSelectHandlers, registerModalHandlers } from '../tasks/interactionCreate.js';
@@ -160,6 +166,9 @@ export const commandReRunButton = (bot, message, command, args) => {
       content: `${config.PREFIX}${command} ${args.join(' ')}`,
     });
     bot.emit('messageCreate', newMessage);
+    const reactable = !!message.react;
+    const replyable = !!message.reply;
+    return reactable ? message.react('🔁') : replyable ? message.reply('Done') : null;
   };
   registerButtonHandlers(handlers);
   return new ButtonBuilder().setLabel('🔁 Run again').setStyle(ButtonStyle.Secondary).setCustomId(customId);
@@ -201,20 +210,48 @@ export const Embed = ({ title = 'Untitled', description = 'No description provid
   if (timestamp) embed.setTimestamp();
   return embed;
 };
-export const sendChunks = async (channel, content, isEmbed = false) => {
+export const sendChunks = async (channel, content, isEmbed = true) => {
   const maxLen = 2000;
-  const chunks = [];
-  let remaining = typeof content === 'string' ? content : JSON.stringify(content);
-  while (remaining.length > maxLen) {
-    const cut = remaining.lastIndexOf("\n", maxLen);
-    chunks.push(remaining.slice(0, cut > 0 ? cut : maxLen));
-    remaining = remaining.slice(cut > 0 ? cut + 1 : maxLen);
-  }
-  if (remaining) chunks.push(remaining);
   const sentMsgs = [];
-  for (const chunk of chunks) {
-    if (isEmbed) sentMsgs.push(await channel.send({ embeds: [chunk] }));
-    else sentMsgs.push(await channel.send(chunk));
+  if (content instanceof EmbedBuilder) {
+    const desc = content.data.description || "";
+    if (desc.length <= maxLen) {
+      sentMsgs.push(await channel.send({ embeds: [content] }));
+      return sentMsgs;
+    }
+    const chunks = [];
+    let remaining = desc;
+    while (remaining.length > maxLen) {
+      const cut = remaining.lastIndexOf("\n", maxLen);
+      chunks.push(remaining.slice(0, cut > 0 ? cut : maxLen));
+      remaining = remaining.slice(cut > 0 ? cut + 1 : maxLen);
+    }
+    if (remaining) chunks.push(remaining);
+    for (const chunk of chunks) {
+      const e = EmbedBuilder.from(content).setDescription(chunk);
+      sentMsgs.push(await channel.send({ embeds: [e] }));
+    }
+    return sentMsgs;
+  }
+  if (typeof content === "string") {
+    let remaining = content;
+    const chunks = [];
+    while (remaining.length > maxLen) {
+      const cut = remaining.lastIndexOf("\n", maxLen);
+      chunks.push(remaining.slice(0, cut > 0 ? cut : maxLen));
+      remaining = remaining.slice(cut > 0 ? cut + 1 : maxLen);
+    }
+    if (remaining) chunks.push(remaining);
+    for (const chunk of chunks) {
+      if (isEmbed) {
+        const e = new EmbedBuilder().setDescription(chunk).setColor("#2f3136");
+        sentMsgs.push(await channel.send({ embeds: [e] }));
+      } else sentMsgs.push(await channel.send(chunk));
+    }
   }
   return sentMsgs;
+};
+export const commandAttachment = async (buffer, name = "file.png", type = "image/png") => {
+  if (!buffer) throw new Error("commandAttachment: missing buffer");
+  return new AttachmentBuilder(buffer, { name, contentType: type });
 };
