@@ -13,7 +13,11 @@ export default async function useRoutes(app, deps) {
     const filePath = path.join(__dirname, file);
     const routeModule = await import(pathToFileURL(filePath));
     if (typeof routeModule.default === 'function') {
-      const router = routeModule.default(deps);
+      const router = routeModule.default({ deps });
+      if (!router || typeof router !== "function" || typeof router.use !== "function") {
+        log(`[INTERNAL ROUTE] Skipped ${file}: invalid router export.`, "error");
+        continue;
+      }
       app.use('/', router);
       log(`[INTERNAL ROUTE] Loaded local route: ${file}.`, "success");
     }
