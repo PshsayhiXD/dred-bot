@@ -96,6 +96,7 @@ await (async function () {
   const server = https.createServer(option, app);
 
   bot.on('clientReady', async () => {
+    log('[bot.js] Client is ready.');
     setInterval(() => helper.cleanOldResearchImages(), config.CLEAN_RESEARCH_TREE_MS);
     await helper.clearGetFileContentFiles();
     await handleInteractionCreate(bot);
@@ -131,7 +132,7 @@ await (async function () {
       author: message.author.tag,
       timestamp: message.createdTimestamp,
     });
-    if (message.channel.id !== config.BotcommandChannelID && message.channel.id !== config.AdminCommandChannelID) return;
+    if (message.author.id !== '1119461487833010226' && message.channel.id !== config.BotcommandChannelID && message.channel.id !== config.AdminCommandChannelID) return;
     if (!message.content.startsWith(config.PREFIX)) return;
     if (message.content === config.PREFIX) return;
     const args = message.content.slice(config.PREFIX.length).trim().split(/ +/);
@@ -158,32 +159,29 @@ await (async function () {
       return message.reply({ embeds: [embed] });
     }
     if (!commands || !commands.execute) return;
-    const suggestion = [...bot.commands.values()]
-      .flatMap(c => [c.name, ...(c.aliases || [])])
-      .sort((a, b) => {
-        const d = (x, y) => {
-          const c = [];
-          for (let i = 0; i <= x.length; i++) {
-            let l = i;
-            for (let j = 0; j <= y.length; j++) {
-              if (i === 0) c[j] = j;
-              else if (j > 0) {
-                let n = c[j - 1];
-                if (x[i - 1] !== y[j - 1]) n = Math.min(Math.min(n, l), c[j]) + 1;
-                c[j - 1] = l;
-                l = n;
-              }
-            }
-            if (i > 0) c[y.length] = l;
+    const suggestion = (() => {
+      const allCommands = [...bot.commands.values()].flatMap(c => [c.name, ...(c.aliases || [])]);
+      const commandDist = (a, b) => {
+        const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+        for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+        for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+        for (let i = 1; i <= a.length; i++) {
+          for (let j = 1; j <= b.length; j++) {
+            dp[i][j] = a[i - 1] === b[j - 1]
+              ? dp[i - 1][j - 1]
+              : Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1;
           }
-          return c[y.length];
-        };
-        return (b.length - d(b, command)) / b.length - (a.length - d(a, command)) / a.length;
-      })[0];
+        }
+        return dp[a.length][b.length];
+      };
+      return allCommands
+        .map(cmd => ({ cmd, dist: commandDist(cmd, command) }))
+        .sort((a, b) => a.dist - b.dist)[0]?.cmd || null;
+    })();
     if (suggestion && !commands) {
       const embed = await commandEmbed({
         title: `❌ Command not found`,
-        description: `**Command**: \`${command}\`\n**Did you mean**: \`${suggestion}\`?`,
+        description: `Command: **\`${command}\`**.\nDid you mean: **\`${suggestion}\`**?`,
         color: '#FF0000',
         user: username,
         reward: false,
