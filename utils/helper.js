@@ -125,6 +125,7 @@ import { enchants } from './enchants/index.js';
 import { recipes } from './recipes/index.js';
 import { jobs } from './jobs/index.js';
 import { pets } from './pets/index.js';
+import { ranks } from './ranks/index.js';
 
 const originalLookup = dns.lookup;
 dns.lookup = function (hostname, options, callback) {
@@ -1207,6 +1208,56 @@ export const resolveDependencies = selfWrap(async function resolveDependencies(d
     dep[rawName] = value;
   }
   return dep;
+});
+export const sendStatusHtml = selfWrap(async function sendStatusHtml(res, status, message, title = "Dredbot") {
+  let bgColor = "#ffffffdd";
+  let alertClass = "alert-primary";
+  if (status >= 500) { bgColor = "#3a0d0d"; alertClass = "alert-dark"; }
+  else if (status >= 400) { bgColor = "#ffcccc"; alertClass = "alert-danger"; }
+  else if (status >= 300) { bgColor = "#fff3cd"; alertClass = "alert-warning"; }
+  else if (status >= 200) { bgColor = "#d4edda"; alertClass = "alert-success"; }
+  const html = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${title}</title>
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body {
+        background: radial-gradient(circle at top left, #9ec5fe, #a1c4fd, #b0d0ff);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Inter", system-ui, sans-serif;
+      }
+      .card {
+        width: 100%;
+        max-width: 420px;
+        border-radius: 1rem;
+        background: ${bgColor};
+        backdrop-filter: blur(8px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        padding: 2rem;
+        text-align: center;
+      }
+      .card h4 { font-weight: 600; color: #0d6efd; margin-bottom: 1rem; }
+      .alert { margin-top: 1rem; font-weight: 500; }
+      button { margin-top: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="card shadow-lg">
+      <h4>${title} - ${status}</h4>
+      <div class="alert ${alertClass}">${message}</div>
+      <button class="btn btn-primary w-100" onclick="history.back()">Go Back</button>
+    </div>
+  </body>
+  </html>
+  `;
+  res.status(status).send(html);
 });
 
 export const getLocalIP = selfWrap(async function getLocalIP() {
@@ -5728,53 +5779,54 @@ export const Permission = selfWrap(async function Permission(user, action, role)
   await initUserObject(user);
   action = action.toLowerCase();
   const data = await loadData(user);
-  let permissions = await normalizePerms(data.Permission);
-  if (action === "get") {
-    if (!permissions.length) return "Guest 0";
-    if (typeof role === "string") {
-      if (role === "max" || role === "highest") {
+  let permissions = data.Permission || [];
+  if (action === 'get') {
+    if (!permissions.length) return 'Guest 0';
+    if (typeof role === 'string') {
+      role = role.toLowerCase();
+      if (role === 'max' || role === 'highest') {
         let highest = [...permissions].sort((a, b) => b.rank - a.rank)[0];
-        return highest ? `${highest.name} ${highest.rank}` : "Guest 0";
+        return highest ? `${highest.name} ${highest.rank}` : 'Guest 0';
       }
-      if (config.RANKS.hasOwnProperty(role)) return `${role} ${config.RANKS[role]}`;
-      if (config.RANKS.genders?.hasOwnProperty(role)) return role;
-      const match = role.match(/^(\d+)(\+|-|=\+|=-|=|>=|<=|>|<)$/);
+      if (ranks[role]) return `${ranks[role].name} ${ranks[role].value}`;
+      if (ranks.genders?.[role]) return role;
+      const match = role.match(/^(\d+(?:\.\d+)?)(\+|-|=|\>=|<=|>|<)$/);
       if (match) {
-        let baseRank = parseFloat(match[1]);
-        let operator = match[2];
-        let filtered = Object.entries(config.RANKS)
-          .filter(([_, rank]) => {
-            if (operator === "+" || operator === ">") return rank > baseRank;
-            if (operator === "-" || operator === "<") return rank < baseRank;
-            if (operator === "=+" || operator === ">=") return rank >= baseRank;
-            if (operator === "=-" || operator === "<=") return rank <= baseRank;
-            if (operator === "=" || operator === "===") return rank === baseRank;
-            return false;
+        const base = parseFloat(match[1]);
+        const op = match[2];
+        const filtered = Object.values(ranks)
+          .filter(r => {
+            switch (op) {
+              case '+': case '>': return r.value > base;
+              case '-': case '<': return r.value < base;
+              case '=': return r.value === base;
+              case '>=': return r.value >= base;
+              case '<=': return r.value <= base;
+            }
           })
-          .map(([name, rank]) => `${name} ${rank}`)
-          .join(", ");
-        return filtered || "No matching roles";
+          .map(r => `${r.name} ${r.value}`)
+          .join(', ');
+        return filtered || 'No matching roles';
       }
     }
-    return permissions.map(r => `${r.name} ${r.rank}`).join(", ");
+    return permissions.map(r => `${r.name} ${r.rank}`).join(', ');
   }
-  if (action === "set" || action === "add") {
-    if (config.RANKS.genders?.hasOwnProperty(role)) {
+  if (action === 'set' || action === 'add') {
+    if (ranks.genders?.[role]) {
       if (permissions.some(r => r.name === role)) return false;
       permissions.push({ name: role, rank: 0 });
-    } else {
-      if (!config.RANKS.hasOwnProperty(role)) return false;
+    } else if (ranks[role]) {
       if (permissions.some(r => r.name === role)) return false;
-      permissions.push({ name: role, rank: config.RANKS[role] });
-    }
+      permissions.push({ name: role, rank: ranks[role].value });
+    } else return false;
     data.Permission = permissions;
     await saveData(user, data);
     return true;
   }
-  if (action === "remove" || action === "delete") {
+  if (action === 'remove' || action === 'delete') {
     if (!permissions.length) return false;
-    if (config.RANKS.genders?.hasOwnProperty(role)) permissions = permissions.filter(r => r.name !== role);
-    else if (config.RANKS.hasOwnProperty(role)) permissions = permissions.filter(r => r.name !== role);
+    if (ranks.genders?.[role]) permissions = permissions.filter(r => r.name !== role);
+    else if (ranks[role]) permissions = permissions.filter(r => r.name !== role);
     else return false;
     if (permissions.length) data.Permission = permissions;
     else delete data.Permission;
