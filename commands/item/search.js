@@ -44,25 +44,6 @@ export default {
     const response = await search();
     const buttons = await dep.commandButtonComponent([
       {
-        label: 'Search Again',
-        customId: `${command}_useagain_${user}`,
-        style: 1,
-        emoji: '🔁',
-        onClick: async (interaction) => {
-          if (interaction.user.id !== message.author.id) return;
-          const cooldown = await dep.Cooldown(user, command);
-          if (cooldown) {
-            return interaction.reply({
-              content: `⏳ You must wait **${dep.formatTime(cooldown.remaining)}** before searching again.`,
-              ephemeral: true,
-            });
-          }
-          await dep.newCooldown(user, command, 120);
-          const newResult = await search();
-          await interaction.update({ ...newResult });
-        }
-      },
-      {
         label: "inventory",
         customId: `${command}_inventory_${user}`,
         style: 2,

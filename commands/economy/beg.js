@@ -37,27 +37,6 @@ export default {
       return { embeds: [embed] };
     };
     const result = await doBeg();
-    const buttons = await dep.commandButtonComponent([
-      {
-        label: "Beg Again",
-        customId: `${command}_useagain_${user}`,
-        style: 1,
-        emoji: "🔁",
-        onClick: async (interaction) => {
-          if (interaction.user.id !== message.author.id) return;
-          const cooldown = await dep.Cooldown(user, command);
-          if (cooldown) {
-            return interaction.reply({
-              content: `⏳ You must wait **${await dep.formatTime(cooldown.remaining)}** before begging again.`,
-              ephemeral: true
-            });
-          }
-          await dep.newCooldown(user, command, 60);
-          const newResult = await doBeg();
-          await interaction.update({ ...newResult, components: buttons });
-        }
-      }
-    ]);
-    return message.reply({ ...result, components: buttons });
+    return message.reply({ ...result });
   }
 };

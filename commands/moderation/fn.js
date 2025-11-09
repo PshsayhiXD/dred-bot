@@ -56,21 +56,6 @@ export default {
       return response;
     };
     const response = await runFunction();
-    const buttons = await dep.commandButtonComponent([
-      {
-        label: '🔁 Run Again',
-        style: ButtonStyle.Secondary,
-        onClick: async (interaction) => {
-          if (interaction.user.id !== message.author.id) return interaction.reply({ content: '❌ This isn’t your command.', ephemeral: true });
-          try {
-            const newResponse = await runFunction();
-            await interaction.update({ ...newResponse });
-          } catch (err) {
-            await interaction.reply({ content: `❌ Error: \`${err.message}\``, ephemeral: true });
-          }
-        }
-      }
-    ]);
-    return message.reply({ ...response, components: buttons });
+    return message.reply({ ...response });
   }
 };
