@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learn More - Dredbot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    body { background: #f8f9fb; font-family: "Segoe UI", sans-serif; overflow-x: hidden; }
+    .hero { background: linear-gradient(135deg, #6c63ff 0%, #5b5fdd 50%, #4b52b7 100%); color: #fff; text-align: center; padding: 5rem 1rem 4rem; }
+    .hero h1 { font-size: 3rem; font-weight: 700; }
+    .hero p { font-size: 1.2rem; opacity: 0.9; max-width: 700px; margin: 1rem auto 2rem; }
+    .features { padding: 4rem 1rem; }
+    footer { background: #fff; text-align: center; padding: 1rem; border-top: 1px solid #dee2e6; font-size: 0.95rem; color: #6c757d; }
+  </style>
+</head>
+<body>
+<div id="learnmore"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="component.js"></script>
+<script nonce="dredbot">
+window.addEventListener("load", async () => {
+  const root = document.getElementById("learnmore");
+
+  const bar = topBar(true, "bg-white shadow-sm justify-content-between");
+  const brand = el("span", "fw-bold text-primary fs-3 me-3", "Dredbot");
+  brand.style.cursor = "pointer";
+  brand.onclick = () => location.href = "/";
+  bar.addItem(brand);
+
+  const navWrap = el("div");
+  navWrap.appendChild(button("Home", "outline-primary", { onclick: () => location.href = "/" }));
+  navWrap.appendChild(button("Login / Signup", "primary", { onclick: () => location.href = "loginsignup.html" }));
+  bar.addItem(navWrap);
+  document.body.prepend(bar);
+
+  const hero = el("section", "hero");
+  hero.appendChild(el("h1", "", "Learn More About Dredbot"));
+  hero.appendChild(el("p", "", "Dredbot is a personal economy and command bot for managing virtual currency, creating custom commands, and enjoying interactive mini-games with friends and communities."));
+  root.appendChild(hero);
+
+  const features = el("section", "features container");
+  features.appendChild(divider('Core Features', 'h', 'center'));
+  const fRow = row(
+    col("col-md-4 mb-4", card(
+      el("div", "d-flex align-items-center mb-3", '<i class="bi bi-cash-stack text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Economy Management</span>'),
+      el("div", "", "Track coins, earn rewards, trade with friends, and level up your personal economy.")
+    )),
+    col("col-md-4 mb-4", card(
+      el("div", "d-flex align-items-center mb-3", '<i class="bi bi-lightning-charge text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Custom Commands</span>'),
+      el("div", "", "Create fun or useful commands like games, jokes, stats, and personalized interactions for your account.")
+    )),
+    col("col-md-4 mb-4", card(
+      el("div", "d-flex align-items-center mb-3", '<i class="bi bi-puzzle text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Interactive Fun</span>'),
+      el("div", "", "Play mini-games, earn rewards, participate in challenges, and enjoy a dynamic interactive experience.")
+    ))
+  );
+  features.appendChild(fRow);
+
+  const extra = el("section", "container my-5");
+  extra.appendChild(divider("Why Choose Dredbot?", "h", "center"));
+  extra.appendChild(el("p", "lead text-center mb-4", "Dredbot goes beyond simple bots. With its economy system, custom commands, and interactive games, it turns your server into a fun, engaging, and rewarding environment."));
+  const extraRow = row(
+    col("col-md-6 mb-4", card(
+      el("h5", "fw-bold", "Easy to Use"),
+      el("div", "", "Install Dredbot quickly, use intuitive commands, and manage your account with ease.")
+    )),
+    col("col-md-6 mb-4", card(
+      el("h5", "fw-bold", "Community Focused"),
+      el("div", "", "Interact with friends, participate in challenges, and enjoy events with your community.")
+    )),
+    col("col-md-6 mb-4", card(
+      el("h5", "fw-bold", "Secure & Reliable"),
+      el("div", "", "Dredbot ensures your virtual currency and data are safely managed, giving you peace of mind.")
+    )),
+    col("col-md-6 mb-4", card(
+      el("h5", "fw-bold", "Customizable Experience"),
+      el("div", "", "Tailor commands and interactions to your server or personal style for maximum fun.")
+    ))
+  );
+  extra.appendChild(extraRow);
+
+  const footer = bottomBar(true, "bg-white border-top justify-content-center text-muted", { fontSize: "0.95rem", padding: "0.75rem" });
+  footer.addItem(el("span", "", "© " + new Date().getFullYear() + " Dredbot. All rights reserved."));
+  
+  root.appendChild(features);
+  root.appendChild(extra);
+  root.appendChild(footer);
+});
+</script>
+</body>
+</html>

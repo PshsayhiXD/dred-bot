@@ -3,8 +3,9 @@ import { Middleware } from './middleware/internal.js';
 import log from './utils/logger.js';
 import { helper } from './utils/helper.js';
 import config from './config.js';
-import * as createRoute from './routes/internal/index.js';
-if (!(await helper.isWifiConnected()).connected) throw new Error("[localhost.js] No WiFi connection.");
+import * as createRoute from './routes/app/index.js';
+import db from './utils/db.js';
+if (!(await helper.isWifiConnected()).connected) throw new Error('[localhost.js] No WiFi connection.');
 log(`[localhost.js] Wifi connected, Good.`);
 const allRoutes = [],
   mounted = new Map(),
@@ -25,22 +26,23 @@ m.forEach(method => {
   };
 });
 const logAllRoutes = (baseURL = '') => {
-  log('\n[localhost.js] Localhost available Routes:', "title");
+  log('\n[localhost.js] Localhost available Routes:', 'title');
   if (!allRoutes.length) return log('  (no routes found)');
   allRoutes.forEach(r => {
-    log(`  [${r.method}] ${r.path} → ${baseURL}${r.path}`, "success");
+    log(`  [${r.method}] ${r.path} → ${baseURL}${r.path}`, 'success');
   });
 };
 
 const app = express();
-await Middleware(app);
-await createRoute.default(app, helper);
+await createRoute.default(app, { ...helper, ...db, log }, null);
+Middleware(app);
+
 logAllRoutes(`http://localhost:${config.LOCALHOST_PORT}`);
 app
   .listen(config.LOCALHOST_PORT, () => {
-    log(`[localhost.js] localhost on http://localhost:${config.LOCALHOST_PORT}`, "success");
+    log(`[localhost.js] localhost on http://localhost:${config.LOCALHOST_PORT}`, 'success');
   })
   .on('error', err => {
     log(`[localhost.js] ${err}`, 'error');
   });
-log('[localhost.js] ready.', "success");
+log('[localhost.js] ready.', 'success');

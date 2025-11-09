@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dredbot - Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    body {
+      background: #f8f9fb;
+      font-family: "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+    .hero {
+      background: linear-gradient(135deg, #6c63ff 0%, #5b5fdd 50%, #4b52b7 100%);
+      color: #fff;
+      text-align: center;
+      padding: 7rem 1rem 6rem;
+    }
+    .hero h1 { font-size: 3.2rem; font-weight: 700; }
+    .hero p { font-size: 1.2rem; opacity: 0.9; max-width: 640px; margin: 1rem auto 2.5rem; }
+    .features { padding: 5rem 1rem; }
+    .cta { text-align: center; padding: 5rem 1rem; background: #fff; }
+    footer { background: #fff; text-align: center; padding: 1rem; border-top: 1px solid #dee2e6; font-size: 0.95rem; color: #6c757d; }
+  </style>
+</head>
+
+<body>
+  <div id="home"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" nonce="dredbot"></script>
+  <script src="component.js"></script>
+  <script nonce="dredbot">
+    window.addEventListener("load", async () => {
+      let user = null;
+      try {
+        const res = await fetch("/get-profile", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include" });
+        const data = await res.json();
+        if (data.success && data.profile) user = data.profile;
+      } catch (e) { console.warn("Profile check failed:", e); }
+
+      const root = document.getElementById("home");
+
+      const bar = topBar(true, "bg-white shadow-sm justify-content-between");
+      const brand = el("span", "fw-bold text-primary fs-3 me-3", "Dredbot");
+      brand.style.cursor = "pointer";
+      brand.onclick = () => location.href = "/";
+      bar.addItem(brand);
+
+      const navWrap = el("div");
+      if (user) {
+        navWrap.appendChild(button("Open Dashboard", "primary", { onclick: "autoLoginRedirect()" }));
+        navWrap.appendChild(button("Logout", "outline-danger", { onclick: "fetch('/logout',{method:'POST',credentials:'include'}).then(()=>location.reload())" }));
+      } else {
+        navWrap.appendChild(button("Login / Signup", "outline-primary", { onclick: "location.href='loginsignup.html'" }));
+      }
+      bar.addItem(navWrap);
+      document.body.prepend(bar);
+
+      const hero = el("section", "hero");
+      hero.appendChild(el("h1", "", "Dredbot - Personal Economy and Command Bot"));
+      hero.appendChild(el("p", "", "Install Dredbot for your account to use fun economy commands, custom interactions, and manage your virtual currency."));
+      const btnWrap = el("div");
+      if (user) btnWrap.appendChild(button("Open Dashboard", "light", { onclick: "autoLoginRedirect()" }));
+      else btnWrap.appendChild(button("Get Started", "light", { onclick: "location.href='loginsignup.html'" }));
+      hero.appendChild(btnWrap);
+
+      const features = el("section", "features container");
+      features.appendChild(divider('Features', 'h', 'center'));
+      const fRow = row(
+        col("col-md-4 mb-4", card(
+          el("div", "d-flex align-items-center mb-3", '<i class="bi bi-cash-stack text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Economy</span>'),
+          el("div", "", "Manage your coins, trade with others, and track your personal economy progress.")
+        )),
+        col("col-md-4 mb-4", card(
+          el("div", "d-flex align-items-center mb-3", '<i class="bi bi-lightning-charge text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Custom Commands</span>'),
+          el("div", "", "Create fun commands and interactions for your account, like games, jokes, or stats.")
+        )),
+        col("col-md-4 mb-4", card(
+          el("div", "d-flex align-items-center mb-3", '<i class="bi bi-puzzle text-primary fs-3 me-2"></i><span class="fw-bold fs-5">Interactive Fun</span>'),
+          el("div", "", "Engage with mini-games, challenges, and command-based rewards.")
+        ))
+      );
+      features.appendChild(fRow);
+
+      const cta = el("section", "cta");
+      cta.appendChild(el("h2", "fw-bold mb-3", "Ready to start your personal economy adventure?"));
+      cta.appendChild(el("p", "text-muted mb-4", "Install Dredbot for your account today and enjoy custom economy commands and interactive fun."));
+      const ctaBtns = el("div");
+      if (user) ctaBtns.appendChild(button("Open Dashboard", "primary", { onclick: "autoLoginRedirect()" }));
+      else {
+        ctaBtns.appendChild(button("Sign Up Free", "primary", { onclick: "location.href='loginsignup.html'" }));
+        ctaBtns.appendChild(button("Learn More", "outline-primary", { onclick: () => location.href = "learnmore.html" }));
+      }
+      cta.appendChild(ctaBtns);
+
+      const footer = bottomBar(true, "bg-white border-top justify-content-center text-muted", { fontSize: "0.95rem", padding: "0.75rem" });
+      footer.addItem(el("span", "", "© " + new Date().getFullYear() + " Dredbot. All rights reserved."));
+
+      root.appendChild(hero);
+      root.appendChild(features);
+      root.appendChild(cta);
+      root.appendChild(footer);
+
+      animate(".soft-card");
+    });
+
+    const autoLoginRedirect = async () => {
+      try {
+        const r = await fetch("/auto-login", { method: "POST", credentials: "include" });
+        if (!r.ok) throw new Error("Login check failed");
+        const txt = await r.text();
+        document.open(); document.write(txt); document.close();
+      } catch (e) { alert("Failed to open dashboard: " + e.message); }
+    };
+  </script>
+</body>
+</html>

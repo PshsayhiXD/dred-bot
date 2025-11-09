@@ -25,7 +25,7 @@ import setupWSS from './wss.js';
 import { getAllCommand, getDupeIdCommands } from './utils/getcommand.js';
 import log from './utils/logger.js';
 import config from './config.js';
-import { Middleware } from './middleware/app.js';
+import { Middleware, notFound } from './middleware/app.js';
 import { checkMissingArgs, checkMissingPermission } from './commands/command-usage.js';
 import { commandEmbed, commandReRunButton } from './utils/commandComponent.js';
 import * as createRoute from './routes/app/index.js';
@@ -86,10 +86,12 @@ await (async function () {
     for (const [id, msg] of messageCache.entries()) {
       if (now - msg.timestamp > 5 * 60 * 1000) messageCache.delete(id); // 5m
     }
-  }, 60 * 1000); // 1m
+  }, 60 * 1000);
 
-  await Middleware(app);
+  Middleware(app);
   await createRoute.default(app, { ...db, log, helper }, bot);
+  notFound(app);
+
   logAllRoutes(`https://${localIP}:${config.HTTPS_PORT}`);
   const server = https.createServer(option, app);
 
