@@ -211,42 +211,40 @@ export const Embed = ({ title = 'Untitled', description = 'No description provid
   return embed;
 };
 export const sendChunks = async (channel, content, isEmbed = true) => {
-  const maxLen = 2000;
+  const MAX_MESSAGE_LEN = 2000;
+  const MAX_EMBED_DESC = 4096;
   const sentMsgs = [];
-  if (content instanceof EmbedBuilder) {
-    const desc = content.data.description || "";
-    if (desc.length <= maxLen) {
-      sentMsgs.push(await channel.send({ embeds: [content] }));
-      return sentMsgs;
-    }
+  const splitText = (text, maxLen) => {
     const chunks = [];
-    let remaining = desc;
+    let remaining = text;
     while (remaining.length > maxLen) {
       const cut = remaining.lastIndexOf("\n", maxLen);
       chunks.push(remaining.slice(0, cut > 0 ? cut : maxLen));
       remaining = remaining.slice(cut > 0 ? cut + 1 : maxLen);
     }
     if (remaining) chunks.push(remaining);
-    for (const chunk of chunks) {
-      const e = EmbedBuilder.from(content).setDescription(chunk);
+    return chunks;
+  };
+  if (content instanceof EmbedBuilder) {
+    const desc = content.data.description || "";
+    const chunks = splitText(desc, MAX_EMBED_DESC);
+    for (let i = 0; i < chunks.length; i++) {
+      const e = EmbedBuilder.from(content)
+        .setDescription(chunks[i])
+        .setTitle(i === 0 ? content.data.title : null);
       sentMsgs.push(await channel.send({ embeds: [e] }));
     }
     return sentMsgs;
   }
   if (typeof content === "string") {
-    let remaining = content;
-    const chunks = [];
-    while (remaining.length > maxLen) {
-      const cut = remaining.lastIndexOf("\n", maxLen);
-      chunks.push(remaining.slice(0, cut > 0 ? cut : maxLen));
-      remaining = remaining.slice(cut > 0 ? cut + 1 : maxLen);
-    }
-    if (remaining) chunks.push(remaining);
+    const chunks = splitText(content, MAX_MESSAGE_LEN);
     for (const chunk of chunks) {
       if (isEmbed) {
         const e = new EmbedBuilder().setDescription(chunk).setColor("#2f3136");
         sentMsgs.push(await channel.send({ embeds: [e] }));
-      } else sentMsgs.push(await channel.send(chunk));
+      } else {
+        sentMsgs.push(await channel.send(chunk));
+      }
     }
   }
   return sentMsgs;
