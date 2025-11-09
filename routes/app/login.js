@@ -17,12 +17,20 @@ export default ({ loadData, saveData, loadAllData, readText, log, helper }, bot)
       const params = new URLSearchParams();
       params.append("secret", process.env.RECAPTCHA_SECRET_KEY);
       params.append("response", token);
-      const verifyRes = await fetch(verifyUrl, { method: "POST", body: params });
+      const verifyRes = await fetch(verifyUrl, { 
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded" 
+        },
+        body: params,
+      });
       const result = await verifyRes.json();
-      if (!result.success || (result.score !== undefined && result.score < 0.5)) return res.status(403).json({ success: false, message: "[403] Failed reCAPTCHA." });
+      if (!result.success || (result.score !== undefined && result.score < 0.5)) 
+        return res.status(403).json({ success: false, message: "[403] Failed reCAPTCHA." });
       const data = await loadData(username);
       const account = data?.account;
-      if (!account) return res.status(401).json({ success: false, message: "[401] Login failed." });
+      if (!account) 
+        return res.status(401).json({ success: false, message: "[401] Login failed." });
       let valid = false;
       try {
         valid = await helper.verifyPassword(password, account.password);
@@ -88,7 +96,7 @@ export default ({ loadData, saveData, loadAllData, readText, log, helper }, bot)
       `;
       return res.send(html);
     } catch (err) {
-      log(`[-] /login error: ${err}`, "error");
+      log(`[-] /login error: ${err.stack}`, "error");
       return res.status(500).json({ success: false, message: "[500] Internal server error", err: err.message });
     }
   });
@@ -104,7 +112,7 @@ export default ({ loadData, saveData, loadAllData, readText, log, helper }, bot)
       }
       return res.json({ approved: false });
     } catch (err) {
-      log(`[-] /login/check error: ${err}`, "error");
+      log(`[-] /login/check error: ${err.stack}`, "error");
       return res.status(500).json({ approved: false });
     }
   });
@@ -134,7 +142,7 @@ export default ({ loadData, saveData, loadAllData, readText, log, helper }, bot)
         : await readText(paths.html.dashboard);
       return res.send(html);
     } catch (err) {
-      log(`[-] /login/final error: ${err}`, "error");
+      log(`[-] /login/final error: ${err.stack}`, "error");
       return res.status(500).send("[500] Internal server error");
     }
   });

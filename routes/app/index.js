@@ -13,7 +13,7 @@ export default async function useRoutes(app, deps, bot = null) {
     const filePath = path.join(__dirname, file);
     const routeModule = await import(pathToFileURL(filePath));
     if (typeof routeModule.default === "function") {
-      const router = routeModule.default({ ...deps, bot });
+      const router = routeModule.default({ ...deps }, bot);
       if (!router || typeof router !== "function" || typeof router.use !== "function") {
         log(`[APP ROUTE] Skipped ${file}: invalid router export.`, "error");
         continue;
