@@ -78,10 +78,10 @@ const handleInteractionCreate = (bot) => {
     try {
       if ((interaction.isButton || interaction.isStringSelectMenu() || interaction.isModalSubmit()) && interaction.customId === 'disabled') return interaction.reply({ content: '🔒 Component has expired or disabled, Please try a new one.', ephemeral: true });
       const user = await helper.loadUsernameByAccountId(interaction.user.id);
+      if (!user) return interaction.reply({ content: '❌ **Not authorized to use this interaction**.', ephemeral: true });
 
       // Slash commands
       if (interaction.isChatInputCommand()) {
-        if (!user) return interaction.reply({ content: '❌ **Not authorized to use this interaction**.', ephemeral: true });
         const command = bot.slashCommands?.get(interaction.commandName);
         if (!command) return interaction.reply({ content: '❌ **Command not found** (register bug).', ephemeral: true });
         const dependencies = await helper.resolveDependencies(command.dependencies);
@@ -90,22 +90,14 @@ const handleInteractionCreate = (bot) => {
       }
 
       // Custom buttons
-      if (interaction.isButton() && buttonHandlers.has(interaction.customId)) {
-        if (!user) return interaction.reply({ content: '❌ **Not authorized to use this interaction**.', ephemeral: true });
-        return await buttonHandlers.get(interaction.customId)(interaction);
-      }
+      if (interaction.isButton() && buttonHandlers.has(interaction.customId)) return await buttonHandlers.get(interaction.customId)(interaction);
 
       // Custom select menu
-      if (interaction.isStringSelectMenu() && selectHandlers.has(interaction.customId)) {
-        if (!user) return interaction.reply({ content: '❌ **Not authorized to use this interaction**.', ephemeral: true });
-        return await selectHandlers.get(interaction.customId)(interaction);
-      }
+      if (interaction.isStringSelectMenu() && selectHandlers.has(interaction.customId)) return await selectHandlers.get(interaction.customId)(interaction);
+
 
       // Custom modal
-      if (interaction.isModalSubmit() && modalHandlers.has(interaction.customId)) {
-        if (!user) return interaction.reply({ content: '❌ **Not authorized to use this interaction**.', ephemeral: true });
-        return await modalHandlers.get(interaction.customId)(interaction);
-      }
+      if (interaction.isModalSubmit() && modalHandlers.has(interaction.customId)) return await modalHandlers.get(interaction.customId)(interaction);
 
       // Reaction roles
       if (interaction.isButton() && interaction.customId.startsWith('role_')) {
