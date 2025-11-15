@@ -203,12 +203,12 @@ export const commandEmbedPager = async (embeds, userId) => {
 export const commandLinkButton = async (label, url, emoji = null) => {
   return await commandButtonComponent([{ label, style: ButtonStyle.Link, url, emoji }]);
 };
-export const Embed = ({ title = 'Untitled', description = 'No description provided.', color = '#2f3136', footer = null, thumbnail = null, timestamp = true } = {}) => {
-  const embed = new EmbedBuilder().setTitle(title).setDescription(description).setColor(color);
-  if (footer) embed.setFooter(footer);
-  if (thumbnail) embed.setThumbnail(thumbnail);
-  if (timestamp) embed.setTimestamp();
-  return embed;
+export const Embed = ({ title = "Untitled", description = "No description provided.", color = "#2f3136", footer = null, thumbnail = null, timestamp = true } = {}) => {
+  const e = new EmbedBuilder().setTitle(title).setDescription(description).setColor(color);
+  if (footer) e.setFooter(typeof footer === "string" ? { text: footer } : footer);
+  if (thumbnail) e.setThumbnail(thumbnail);
+  if (timestamp) e.setTimestamp();
+  return e;
 };
 export const sendChunks = async (channel, content, isEmbed = true) => {
   const MAX_MESSAGE_LEN = 2000;
@@ -218,32 +218,42 @@ export const sendChunks = async (channel, content, isEmbed = true) => {
     const chunks = [];
     let remaining = text;
     while (remaining.length > maxLen) {
-      const cut = remaining.lastIndexOf("\n", maxLen);
-      chunks.push(remaining.slice(0, cut > 0 ? cut : maxLen));
-      remaining = remaining.slice(cut > 0 ? cut + 1 : maxLen);
+      let cut = remaining.lastIndexOf('\n', maxLen);
+      if (cut <= 0) cut = maxLen;
+      chunks.push(remaining.slice(0, cut));
+      remaining = remaining.slice(cut);
     }
     if (remaining) chunks.push(remaining);
     return chunks;
   };
   if (content instanceof EmbedBuilder) {
-    const desc = content.data.description || "";
+    const desc = content.data.description || '';
     const chunks = splitText(desc, MAX_EMBED_DESC);
     for (let i = 0; i < chunks.length; i++) {
       const e = EmbedBuilder.from(content)
         .setDescription(chunks[i])
-        .setTitle(i === 0 ? content.data.title : null);
-      sentMsgs.push(await channel.send({ embeds: [e] }));
+        .setTitle(i === 0 ? content.data.title : `${content.data.title || 'Embed'} (part ${i + 1})`);
+      try {
+        sentMsgs.push(await channel.send({ embeds: [e] }));
+      } catch (err) {
+        console.error(`[sendChunks] Failed to send embed part ${i + 1}:`, err.message);
+      }
     }
     return sentMsgs;
   }
-  if (typeof content === "string") {
+  if (typeof content === 'string') {
     const chunks = splitText(content, MAX_MESSAGE_LEN);
-    for (const chunk of chunks) {
-      if (isEmbed) {
-        const e = new EmbedBuilder().setDescription(chunk).setColor("#2f3136");
-        sentMsgs.push(await channel.send({ embeds: [e] }));
-      } else {
-        sentMsgs.push(await channel.send(chunk));
+    for (let i = 0; i < chunks.length; i++) {
+      try {
+        if (isEmbed) {
+          const e = new EmbedBuilder().setDescription(chunks[i]).setColor('#2f3136')
+            .setTitle(i === 0 ? 'Message' : `Message (part ${i + 1})`);
+          sentMsgs.push(await channel.send({ embeds: [e] }));
+        } else {
+          sentMsgs.push(await channel.send(chunks[i]));
+        }
+      } catch (err) {
+        console.error(`[sendChunks] Failed to send text part ${i + 1}:`, err.message);
       }
     }
   }
