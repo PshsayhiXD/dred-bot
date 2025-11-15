@@ -5,18 +5,23 @@ export default {
   usage: '',
   category: 'item',
   perm: 0,
-  cooldown: 120,
+  cooldown: async function(user, data) {
+    const baseCooldown = 10 * 60 * 1000;
+    const searchCooldownMultiplier = data.stats.search_cooldown || 1;
+    return baseCooldown / searchCooldownMultiplier;
+  },
   globalCooldown: 1,
   id: 17,
   dependencies: `giveItem commandEmbed config formatTime 
-                 formatAmount getRandomItemByChance 
+                 formatAmount getRandomItemByChance loadData
                  commandButtonComponent Cooldown newCooldown`,
   execute: async (message, args, user, command, dep) => {
+    const data = await dep.loadData(user);
     const search = async () => {
       const baseItems = await dep.getRandomItemByChance(user, 'consumable', [1, 3], { Metadata: true, all: true });
       const foundItems = baseItems.map(item => ({
         ...item,
-        amount: Math.floor(Math.random() * 4) + 1,
+        amount: Math.floor(Math.random() * 4) + 1 + data.stats.search_quality,
       }));
       if (foundItems.length === 0) {
         const embed = await dep.commandEmbed({
