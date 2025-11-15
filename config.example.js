@@ -11,6 +11,7 @@ const config = {
     'database',
     'archive',
     'ae.py',
+    'temp',
     '.env',
     '.env.example',
     '.vscode',
