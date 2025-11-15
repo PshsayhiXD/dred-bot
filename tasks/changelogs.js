@@ -1,111 +1,128 @@
-import fs from "fs";
-import path from "path";
-import paths from "../utils/path.js";
-import config from "../config.js";
-import log from "../utils/logger.js";
-import { sendChunks } from "../utils/commandComponent.js";
+import fs from 'fs';
+import path from 'path';
+import paths from '../utils/path.js';
+import config from '../config.js';
+import log from '../utils/logger.js';
 const changelogs = paths.database.changelogs;
 const watching = paths.root;
+const tempDir = paths.temp;
 const channelId = config.changelogsChannelID;
 const ignore = (config.IGNORE_PATHS || []).map(p => path.resolve(watching, p));
-const scanDir = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => {
-  const p = path.resolve(d, e.name);
-  if (ignore.some(i => p.startsWith(i))) return [];
-  if (e.isDirectory()) return scanDir(p);
-  return [[p, fs.statSync(p).size]];
-});
-const loadData = () => fs.existsSync(changelogs) ? JSON.parse(fs.readFileSync(changelogs)) : {};
+const scanDir = d =>
+  fs.readdirSync(d, { withFileTypes: true }).flatMap(e => {
+    const p = path.resolve(d, e.name);
+    if (ignore.some(i => p.startsWith(i))) return [];
+    if (e.isDirectory()) return scanDir(p);
+    return [[p, fs.statSync(p).size]];
+  });
+const loadData = () => (fs.existsSync(changelogs) ? JSON.parse(fs.readFileSync(changelogs)) : {});
 const saveData = d => fs.writeFileSync(changelogs, JSON.stringify(d, null, 2));
-const formatSize = size => {
-  if (size < 1024) return size + " B";
-  if (size < 1024 * 1024) return (size / 1024).toFixed(2) + " KB";
-  if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)).toFixed(2) + " MB";
-  return (size / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+const formatSize = s => {
+  if (s < 1024) return s + ' B';
+  if (s < 1024 * 1024) return (s / 1024).toFixed(2) + ' KB';
+  if (s < 1024 * 1024 * 1024) return (s / (1024 * 1024)).toFixed(2) + ' MB';
+  return (s / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 };
-const buildTree = (files) => {
+const buildTree = files => {
   const tree = {};
-  for (const [relPath, info] of Object.entries(files)) {
-    const parts = relPath.split(path.sep);
-    let node = tree;
+  for (const [rel, info] of Object.entries(files)) {
+    const parts = rel.split(path.sep);
+    let n = tree;
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
-      if (i === parts.length - 1) node[part] = info;
+      if (i === parts.length - 1) n[part] = info;
       else {
-        node[part] ||= {};
-        node = node[part];
+        n[part] ||= {};
+        n = n[part];
       }
     }
   }
   return tree;
 };
-const formatTree = (node, prefix = "") => {
-  let str = "";
+const formatTree = (node, prefix = '') => {
+  let str = '';
   const entries = Object.entries(node);
-  entries.forEach(([name, value], idx) => {
-    const isLast = idx === entries.length - 1;
-    const pointer = isLast ? "└─" : "├─";
-    if (typeof value === "object" && !("size" in value) && !("timestamp" in value)) {
-      str += `${prefix}${pointer} ${name}/\n`;
-      str += formatTree(value, prefix + (isLast ? "   " : "│  "));
+  entries.forEach(([name, val], i) => {
+    const last = i === entries.length - 1;
+    const ptr = last ? '└─' : '├─';
+    if (typeof val === 'object' && !('size' in val) && !('oldSize' in val)) {
+      str += `${prefix}${ptr} ${name}/\n`;
+      str += formatTree(val, prefix + (last ? '   ' : '│  '));
     } else {
-      const ts = value.timestamp ? ` [${value.timestamp}]` : "";
-      const size = value.size ? ` (${formatSize(value.size)})` : "";
-      str += `${prefix}${pointer} ${name}${size}${ts}\n`;
+      const ts = val.timestamp ? ` [${val.timestamp}]` : '';
+      let size = '';
+      if ('oldSize' in val && 'newSize' in val) size = ` (${formatSize(val.oldSize)} → ${formatSize(val.newSize)})`;
+      else if ('size' in val) size = ` (${formatSize(val.size)})`;
+      str += `${prefix}${ptr} ${name}${size}${ts}\n`;
     }
   });
   return str;
 };
-const setupChangelogs = async bot => {
-  const maxDay = config.MAX_CHANGELOG_AGE;
+const setupChangelogs = async (bot) => {
+  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+  const max = config.MAX_CHANGELOG_AGE;
   const data = loadData();
-  const snapshot = Object.fromEntries(scanDir(watching).map(([p, size]) => [path.relative(watching, p), { size }]));
-  const nowDate = new Date().toISOString().split("T")[0];
+  const snap = Object.fromEntries(scanDir(watching).map(([p, s]) => [path.relative(watching, p), { size: s }]));
+  const date = new Date().toISOString().split('T')[0];
+  log(`[changelogs.js] snapshot contains ${Object.keys(snap).length} files`, 'info');
   const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - maxDay);
-  for (const date of Object.keys(data)) {
-    if (new Date(date) < cutoff) delete data[date];
-  }
-  if (!data[nowDate]) {
-    data[nowDate] = { files: snapshot, msgIds: [], added: [], modified: [], deleted: [] };
-    saveData(data);
-    log("[changelogs.js] initialized today, skipping changelog.", "warn");
-    return;
-  }
-  data[nowDate].added ||= [];
-  data[nowDate].modified ||= [];
-  data[nowDate].deleted ||= [];
-  const oldSnap = data[nowDate].files;
-  const addedFiles = Object.keys(snapshot).filter(k => !oldSnap[k]);
-  const deletedFiles = Object.keys(oldSnap).filter(k => !snapshot[k]);
-  const modifiedFiles = Object.keys(snapshot).filter(k => oldSnap[k] && oldSnap[k].size !== snapshot[k].size);
-  if (!addedFiles.length && !deletedFiles.length && !modifiedFiles.length) return;
-  const timeFmt = () => `<t:${Math.floor(Date.now() / 1000)}:T>`;
-  for (const f of addedFiles) data[nowDate].added.push({ path: f, timestamp: timeFmt() });
-  for (const f of deletedFiles) data[nowDate].deleted.push({ path: f, timestamp: timeFmt() });
-  for (const f of modifiedFiles) data[nowDate].modified.push({ path: f, timestamp: timeFmt(), oldSize: oldSnap[f].size, newSize: snapshot[f].size });
+  cutoff.setDate(cutoff.getDate() - max);
+  for (const d of Object.keys(data)) if (new Date(d) < cutoff) delete data[d];
+  if (!data[date]) data[date] = { files: {}, msgIds: [], added: [], modified: [], deleted: [] };
+  const old = data[date].files || {};
+  const oldKeys = Object.keys(old);
+  const newKeys = Object.keys(snap);
+  const same = oldKeys.length === newKeys.length && oldKeys.every(k => snap[k] && snap[k].size === old[k].size);
+  if (same) return log('[changelogs.js] snapshot unchanged, skipping.', 'info');
+  const added = newKeys.filter(k => !old[k]);
+  const deleted = oldKeys.filter(k => !snap[k]);
+  const modified = newKeys.filter(k => old[k] && old[k].size !== snap[k].size);
+  log(`[changelogs.js] computed changes: added=${added.length} modified=${modified.length} deleted=${deleted.length}`, 'info');
+  const t = () => `<t:${Math.floor(Date.now() / 1000)}:T>`;
+  for (const f of added) data[date].added.push({ path: f, timestamp: t() });
+  for (const f of deleted) data[date].deleted.push({ path: f, timestamp: t() });
+  for (const f of modified)
+    data[date].modified.push({ path: f, timestamp: t(), oldSize: old[f].size, newSize: snap[f].size });
   const sections = [
-    { title: "🟢 Added", files: data[nowDate].added },
-    { title: "🟡 Modified", files: data[nowDate].modified },
-    { title: "🔴 Deleted", files: data[nowDate].deleted }
+    { title: '🟢 Added', list: data[date].added },
+    { title: '🟡 Modified', list: data[date].modified },
+    { title: '🔴 Deleted', list: data[date].deleted },
   ];
-  const embeds = [];
-  for (const [idx, section] of sections.entries()) {
-    if (!section.files.length) continue;
-    const filesObj = Object.fromEntries(section.files.map(f => [f.path, { size: f.newSize || f.oldSize || 0, timestamp: f.timestamp }]));
-    const treeStr = "```" + formatTree(buildTree(filesObj)) + "```";
-    embeds.push({
-      title: idx === 0 ? "📜 CHANGELOG" : null,
-      description: `${section.title}:\n${treeStr}`
-    });
+  const out = [];
+  for (const s of sections) {
+    if (!s.list.length) {
+      out.push(s.title + ':\n_no changes_');
+      continue;
+    }
+    const obj = Object.fromEntries(s.list.map(f => {
+      const info = { timestamp: f.timestamp };
+      if ('oldSize' in f && 'newSize' in f) {
+        info.oldSize = f.oldSize;
+        info.newSize = f.newSize;
+      } else info.size = f.newSize || f.oldSize || 0;
+      return [f.path, info];
+    }));
+    out.push(s.title + ':\n' + formatTree(buildTree(obj)));
   }
+  const txt = out.join('\n\n');
   const ch = await bot.channels.fetch(channelId);
-  const sentMsgs = [];
-  for (const e of embeds) sentMsgs.push(...await sendChunks(ch, e));
-  data[nowDate].msgIds = sentMsgs.map(m => m.id);
-  for (const f of addedFiles.concat(modifiedFiles)) oldSnap[f] = snapshot[f];
-  for (const f of deletedFiles) delete oldSnap[f];
+  if (data[date].msgIds.length) {
+    try {
+      const msg = await ch.messages.fetch(data[date].msgIds[0]);
+      await msg.edit({ content: txt });
+    } catch {
+      const msg = await ch.send({ content: txt });
+      data[date].msgIds = [msg.id];
+    }
+  } else {
+    const msg = await ch.send({ content: txt });
+    data[date].msgIds = [msg.id];
+  }
+  for (const f of added.concat(modified)) old[f] = snap[f];
+  for (const f of deleted) delete old[f];
   saveData(data);
-  log("[changelogs.js] registered.", "success");
+  log('[changelogs.js] registered.', 'success');
+  return { ok: true };
 };
 
 export default setupChangelogs;
