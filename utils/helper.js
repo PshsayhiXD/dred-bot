@@ -391,7 +391,7 @@ export const parseAmount = selfWrap(async function parseAmount(input) {
   }
 });
 export const parseBet = selfWrap(async function parseBet(input, bal) {
-  if (!input) return errorMsg(`${this.name}`, 'No bet amount provided.', 0o0, { bet: 0 });
+  if (!input) return errorMsg(this.name, 'No bet amount provided.', 0o0, { bet: 0 });
   const suffixMap = {
     k: 1e3,
     m: 1e6,
@@ -416,8 +416,8 @@ export const parseBet = selfWrap(async function parseBet(input, bal) {
     vd: 1e63,
   };
   input = input.toLowerCase().trim();
-  if (input === 'all') return successMsg(`${this.name}`, 'parsed', 0o0, { bet: bal });
-  if (input === 'half') return successMsg(`${this.name}`, 'parsed', 0o0, { bet: Math.floor(bal / 2) });
+  if (input === 'all') return successMsg(this.name, 'parsed', 0o0, { bet: bal });
+  if (input === 'half') return successMsg(this.name, 'parsed', 0o0, { bet: Math.floor(bal / 2) });
   input = input.replace(/(\d+(?:\.\d+)?)([a-z]+)/gi, (_, num, suf) => {
     const mul = suffixMap[suf] || 1;
     return `(${num}*${mul})`;
@@ -426,11 +426,11 @@ export const parseBet = selfWrap(async function parseBet(input, bal) {
   try {
     bet = evaluate(input);
   } catch {
-    return errorMsg(`${this.name}`, 'Invalid bet format.', 0o0, { bet: 0 });
+    return errorMsg(this.name, 'Invalid bet format.', 0o0, { bet: 0 });
   }
-  if (typeof bet !== 'number' || isNaN(bet) || bet <= 0) return errorMsg(`${this.name}`, 'Bet must be a positive number.', 0o0, { bet: 0 });
-  if (bet > bal) return errorMsg(`${this.name}`, 'Insufficient balance for this bet.', 0o0, { bet: 0 });
-  return successMsg(`${this.name}`, 'parsed', 0o0, { bet: Math.floor(bet) });
+  if (typeof bet !== 'number' || isNaN(bet) || bet <= 0) return errorMsg(this.name, 'Bet must be a positive number.', 0o0, { bet: 0 });
+  if (bet > bal) return errorMsg(this.name, 'Insufficient balance for this bet.', 0o0, { bet: 0 });
+  return successMsg(this.name, 'parsed', 0o0, { bet: Math.floor(bet) });
 });
 export const formatAmount = selfWrap(async function formatAmount(num, options = {}) {
   if (typeof num !== 'number' || isNaN(num)) return 'NaN';
@@ -731,7 +731,7 @@ export const waitForMessages = selfWrap(async function waitForMessages(channel, 
   const res = [],
     start = Date.now();
   for (let i = 0; i < steps.length; i++) {
-    if (Date.now() - start > timeout) throwError(`${this.name}`, `total timeout (${timeout}ms) at step ${i + 1}.`);
+    if (Date.now() - start > timeout) throwError(this.name, `total timeout (${timeout}ms) at step ${i + 1}.`);
     if (prompt[i]) {
       const p = prompt[i];
       channel.type === 1 || channel.type === 'DM' ? await user.send(p) : await channel.send(p);
@@ -785,7 +785,7 @@ export const formatFlags = selfWrap(async function formatFlags(bitfield) {
 });
 export const runCommand = selfWrap(async function runCommand(bot, message, content) {
   if (message.author.bot) return;
-  if (!bot) throwError(`${this.name}`, `Expected bot parameter (${bot}).`);
+  if (!bot) throwError(this.name, `Expected bot parameter (${bot}).`);
   bot.emit('messageCreate', {
     ...message,
     content,
@@ -1204,7 +1204,7 @@ export const resolveDependencies = selfWrap(async function resolveDependencies(d
         if (value !== undefined) break;
       }
     }
-    if (value === undefined) throwError(`${this.name}`, `Unknown dependency '${rawName}'`);
+    if (value === undefined) throwError(this.name, `Unknown dependency '${rawName}'`);
     dep[rawName] = value;
   }
   return dep;
@@ -1640,7 +1640,7 @@ export const blueprintCompare = selfWrap(async function blueprintCompare(bpStr1,
 });
 
 export const givePermanentBoost = selfWrap(async function givePermanentBoost(user, { dredcoin = 0, exp = 0 }) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (dredcoin !== 0) data.multiplier.dredcoin += dredcoin;
@@ -1648,7 +1648,7 @@ export const givePermanentBoost = selfWrap(async function givePermanentBoost(use
   await saveData(user, data);
 });
 export const giveDredcoinBoost = selfWrap(async function giveDredcoinBoost(user, multiplier, duration) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const expiresAt = Date.now() + duration;
@@ -1665,10 +1665,10 @@ export const giveDredcoinBoost = selfWrap(async function giveDredcoinBoost(user,
 });
 // with boosts / dredcoin multipliers
 export const giveDredcoin = selfWrap(async function giveDredcoin(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   amount = Number(amount);
-  if (!isInteger(amount)) throwError(`${this.name}`, `${amount} is not a valid number.`);
+  if (!isInteger(amount)) throwError(this.name, `${amount} is not a valid number.`);
   const tax = await getTax(amount, user);
   const taxedAmount = amount - tax;
   const { totalMultiplier: boostMultiplier } = await getActiveBoosts(user, 'dredcoin');
@@ -1694,10 +1694,10 @@ export const giveDredcoin = selfWrap(async function giveDredcoin(user, amount) {
 });
 // without boosts / dredcoin multiplier
 export const addDredcoin = selfWrap(async function addDredcoin(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   amount = Number(amount);
-  if (!isInteger(amount) || amount < 0) throwError(`${this.name}`, `Invalid amount '${amount}'.`);
+  if (!isInteger(amount) || amount < 0) throwError(this.name, `Invalid amount '${amount}'.`);
   let data = await loadData(user);
   if (typeof data.balance.dredcoin !== 'number') data.balance.dredcoin = 0;
   const { max } = await isMaxCoin(user);
@@ -1710,7 +1710,7 @@ export const addDredcoin = selfWrap(async function addDredcoin(user, amount) {
   });
 });
 export const removeDredcoin = selfWrap(async function removeDredcoin(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   amount = Number(amount);
   if (!isInteger(amount)) return false;
@@ -1728,10 +1728,10 @@ export const removeDredcoin = selfWrap(async function removeDredcoin(user, amoun
   });
 });
 export const setDredcoin = selfWrap(async function setDredcoin(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   amount = Number(amount);
-  if (!isInteger(amount)) throwError(`${this.name}`, `${amount} is not a valid number.`);
+  if (!isInteger(amount)) throwError(this.name, `${amount} is not a valid number.`);
   const { max } = await isMaxCoin(user);
   const clamped = Math.max(0, Math.min(amount, max));
   const data = await loadData(user);
@@ -1746,27 +1746,27 @@ export const setDredcoin = selfWrap(async function setDredcoin(user, amount) {
 });
 
 export const getDredcoin = selfWrap(async function getDredcoin(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   return data.balance.dredcoin;
 });
 export const getBankBalance = selfWrap(async function getBankBalance(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   return data.bank.balance;
 });
 
 export const applyDredcoinMultiplier = selfWrap(async function applyDredcoinMultiplier(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const applied = amount * data.multiplier.dredcoin * data.prestige;
   return applied;
 });
 export const applyExpMultiplier = selfWrap(async function applyExpMultiplier(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const applied = amount * data.multiplier.exp * data.prestige;
@@ -1774,7 +1774,7 @@ export const applyExpMultiplier = selfWrap(async function applyExpMultiplier(use
 });
 
 export const isMaxCoin = selfWrap(async function isMaxCoin(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (config.MAX_DREDCOIN === false) {
@@ -1790,7 +1790,7 @@ export const isMaxCoin = selfWrap(async function isMaxCoin(user) {
     try {
       maxAmount = parseAmount(maxAmount);
     } catch (err) {
-      throwError(`${this.name}`, `Failed to parse MAX_DREDCOIN string: ${config.MAX_DREDCOIN}`);
+      throwError(this.name, `Failed to parse MAX_DREDCOIN string: ${config.MAX_DREDCOIN}`);
     }
   }
   return successMsg(this.name, ``, {
@@ -1801,7 +1801,7 @@ export const isMaxCoin = selfWrap(async function isMaxCoin(user) {
   });
 });
 export const isMaxBank = selfWrap(async function isMaxBank(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   let maxAmount = config.MAX_BANK;
@@ -1810,7 +1810,7 @@ export const isMaxBank = selfWrap(async function isMaxBank(user) {
     try {
       maxAmount = parseAmount(maxAmount);
     } catch (err) {
-      throwError(`${this.name}`, `Failed to parse MAX_BANK string: ${config.MAX_BANK}`);
+      throwError(this.name, `Failed to parse MAX_BANK string: ${config.MAX_BANK}`);
     }
   }
   return successMsg(this.name, ``, {
@@ -1821,7 +1821,7 @@ export const isMaxBank = selfWrap(async function isMaxBank(user) {
   });
 });
 export const isMaxLevel = selfWrap(async function isMaxLevel(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const lv = data?.exp?.lv ?? 0;
@@ -1856,7 +1856,7 @@ export const getExpNeeded = selfWrap(async function getExpNeeded(level, user) {
   return Math.floor(base);
 });
 export const getUserExpData = selfWrap(async function getUserExpData(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!data.exp || typeof data.exp !== 'object') data.exp = { lv: 1, exp: 0 };
@@ -1881,7 +1881,7 @@ export const getUserExpData = selfWrap(async function getUserExpData(user) {
   });
 });
 export const canLevelUp = selfWrap(async function canLevelUp(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const { current, level } = await getUserExpData(user);
   let tempLevel = level,
@@ -1895,7 +1895,7 @@ export const canLevelUp = selfWrap(async function canLevelUp(user) {
   return count > 0 ? count : false;
 });
 export const forceLevelUp = selfWrap(async function forceLevelUp(user, amount = 1) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   amount = Number(amount);
   if (!Number.isFinite(amount) || amount <= 0) throwError('[-] forceLevelUp: Invalid amount.');
@@ -1945,7 +1945,7 @@ export const forceLevelUp = selfWrap(async function forceLevelUp(user, amount = 
   });
 });
 export const levelUpIfCan = selfWrap(async function levelUpIfCan(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const levelUps = await canLevelUp(user);
   if (!levelUps)
@@ -1962,7 +1962,7 @@ export const levelUpIfCan = selfWrap(async function levelUpIfCan(user) {
   });
 });
 export const giveExp = selfWrap(async function giveExp(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!data.exp || typeof data.exp !== 'object') data.exp = { lv: 1, exp: 0 };
@@ -2014,10 +2014,10 @@ export const giveExp = selfWrap(async function giveExp(user, amount) {
   });
 });
 export const removeExp = selfWrap(async function removeExp(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   amount = Number(amount);
-  if (!isInteger(amount) || amount <= 0) throwError(`${this.name}`, `Invalid amount.`);
+  if (!isInteger(amount) || amount <= 0) throwError(this.name, `Invalid amount.`);
   const { data, current, needed, level: oldLevel } = await getUserExpData(user);
   let level = oldLevel;
   let exp = current - amount;
@@ -2045,7 +2045,7 @@ export const removeExp = selfWrap(async function removeExp(user, amount) {
   });
 });
 export const giveExpBoost = selfWrap(async function giveExpBoost(user, multiplier, duration) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const expiresAt = Date.now() + duration;
@@ -2061,7 +2061,7 @@ export const giveExpBoost = selfWrap(async function giveExpBoost(user, multiplie
   });
 });
 export const getExp = selfWrap(async function getExp(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const current = (data.exp.xp ??= 0);
@@ -2076,7 +2076,7 @@ export const getExp = selfWrap(async function getExp(user) {
 });
 
 export const prestigeIfCan = selfWrap(async function prestigeIfCan(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const oldPrestige = Number.isFinite(data?.prestige) ? data.prestige : 0;
@@ -2108,7 +2108,7 @@ export const prestigeIfCan = selfWrap(async function prestigeIfCan(user) {
   });
 });
 export const prestige = selfWrap(async function prestige(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const oldPrestige = Number.isFinite(data.prestige) ? data.prestige : 0;
@@ -2130,7 +2130,7 @@ export const prestige = selfWrap(async function prestige(user) {
   });
 });
 export const getPrestige = selfWrap(async function getPrestige(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const prestige = data?.prestige;
@@ -2143,7 +2143,7 @@ export const isExpired = selfWrap(async function isExpired(boost) {
   return expired;
 });
 export const deleteAllExpiredBoosts = selfWrap(async function deleteAllExpiredBoosts(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   let summary = {};
@@ -2164,7 +2164,7 @@ export const deleteAllExpiredBoosts = selfWrap(async function deleteAllExpiredBo
   });
 });
 export const deleteExpiredBoosts = selfWrap(async function deleteExpiredBoosts(user, boostType) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!data.boost || !Array.isArray(data.boost[boostType])) return;
@@ -2176,7 +2176,7 @@ export const deleteExpiredBoosts = selfWrap(async function deleteExpiredBoosts(u
   });
 });
 export const getActiveBoosts = selfWrap(async function getActiveBoosts(user, boostType) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!data.boost) data.boost = {};
@@ -2197,7 +2197,7 @@ export const getActiveBoosts = selfWrap(async function getActiveBoosts(user, boo
   });
 });
 export const giveBoost = selfWrap(async function giveBoost(user, type, multiplier, duration) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const expiresAt = Date.now() + duration;
@@ -2215,7 +2215,7 @@ export const giveBoost = selfWrap(async function giveBoost(user, type, multiplie
 });
 
 export const giveLuck = selfWrap(async function giveLuck(user, category, multiplier, durationMs) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!data.boost) data.boost = {};
@@ -2238,7 +2238,7 @@ export const giveLuck = selfWrap(async function giveLuck(user, category, multipl
   });
 });
 export const getLuck = selfWrap(async function getLuck(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const now = Date.now();
@@ -2253,7 +2253,7 @@ export const getLuck = selfWrap(async function getLuck(user) {
 });
 
 export const giveLuckBoost = selfWrap(async function giveLuckBoost(user, multiplier, durationMs) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!Array.isArray(data.boost.luck_global)) data.boost.luck_global = [];
@@ -2267,7 +2267,7 @@ export const giveLuckBoost = selfWrap(async function giveLuckBoost(user, multipl
   });
 });
 export const applyLuckBoost = selfWrap(async function applyLuckBoost(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const now = Date.now();
@@ -2292,7 +2292,7 @@ export const applyLuckBoost = selfWrap(async function applyLuckBoost(user) {
 });
 
 export const givePassiveIncomeBoost = selfWrap(async function givePassiveIncomeBoost(user, multiplier, duration) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   data.boost.passiveIncome.push({
@@ -2307,7 +2307,7 @@ export const givePassiveIncomeBoost = selfWrap(async function givePassiveIncomeB
   });
 });
 export const earnPassiveIncome = selfWrap(async function earnPassiveIncome(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const now = Date.now();
   const data = await loadData(user);
@@ -2351,7 +2351,7 @@ export const earnPassiveIncome = selfWrap(async function earnPassiveIncome(user)
   });
 });
 export const getPassiveIncome = selfWrap(async function getPassiveIncome(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const now = Date.now();
   const data = await loadData(user);
@@ -2400,7 +2400,7 @@ export const getPassiveIncome = selfWrap(async function getPassiveIncome(user) {
 });
 
 export const giveCooldownBoost = selfWrap(async function giveCooldownBoost(user, multiplier, durationMs) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!Array.isArray(data.boost.cooldown)) data.boost.cooldown = [];
@@ -2416,7 +2416,7 @@ export const giveCooldownBoost = selfWrap(async function giveCooldownBoost(user,
   });
 });
 export const getCooldownBoost = selfWrap(async function getCooldownBoost(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!Array.isArray(data.boost.cooldown)) data.boost.cooldown = [];
@@ -2442,20 +2442,22 @@ export const getCooldownBoost = selfWrap(async function getCooldownBoost(user) {
     boosts: activeBoosts,
   });
 });
-export const resolveCooldown = selfWrap(async function resolveCooldown(cooldown, user, data) {
+export const resolveCooldown = selfWrap(async function resolveCooldown(cooldown, user, data, depOrStr, message) {
+  let dep = depOrStr;
+  if (typeof depOrStr === "string") dep = await resolveDependencies(depOrStr, message);
   if (typeof cooldown === "function") {
-    const val = await cooldown(user, data);
+    const val = await cooldown(user, data, dep);
     return successMsg(this.name, ``, { cooldown: val, user });
   }
   return successMsg(this.name, ``, { cooldown, user });
 });
-export const newCooldown = selfWrap(async function newCooldown(user, command, seconds) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+export const newCooldown = selfWrap(async function newCooldown(user, command, seconds, message) {
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
-  const resolved = (await resolveCooldown(command.cooldown ?? seconds, user, data)).cooldown;
+  const resolved = (await resolveCooldown(command.cooldown ?? seconds, user, data, command.dependencies, message)).cooldown;
   const sec = Number(resolved);
-  if (isNaN(sec)) throwError(`${this.name}`, `Invalid cooldown value: ${resolved}`);
+  if (isNaN(sec)) throwError(this.name, `Invalid cooldown value: ${resolved}`);
   const now = Date.now();
   if (sec <= 0) return successMsg(this.name, ``, { setAt: now, duration: 0, expires: now });
   cooldowns = cooldowns || {};
@@ -2469,13 +2471,13 @@ export const newCooldown = selfWrap(async function newCooldown(user, command, se
   cooldowns[user][command] = { setAt: now, duration, expires: now + duration };
   return successMsg(this.name, ``, { user, command, baseDuration, finalDuration: duration, expire: now + duration });
 });
-export const newGlobalCooldown = selfWrap(async function newGlobalCooldown(user, command, seconds) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+export const newGlobalCooldown = selfWrap(async function newGlobalCooldown(user, command, seconds, message) {
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
-  const resolved = (await resolveCooldown(command.globalCooldown ?? seconds, user, data)).cooldown;
+  const resolved = (await resolveCooldown(command.globalCooldown ?? seconds, user, data, command.dependencies, message)).cooldown;
   const sec = Number(resolved);
-  if (isNaN(sec)) throwError(`${this.name}`, `Invalid global cooldown value: ${resolved}`);
+  if (isNaN(sec)) throwError(this.name, `Invalid global cooldown value: ${resolved}`);
   const now = Date.now();
   if (sec <= 0) return successMsg(this.name, ``, { user, expires: now, setAt: now });
   if (!data.globalCooldown) data.globalCooldown = {};
@@ -2510,7 +2512,7 @@ export const Cooldown = selfWrap(async function Cooldown(user, command) {
   return successMsg(this.name, ``, { user, command, remaining, expires: cd.expires, claimableAt: new Date(cd.expires) });
 });
 export const GlobalCooldown = selfWrap(async function GlobalCooldown(user, command) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const cd = data?.globalCooldown?.[command];
@@ -2538,7 +2540,7 @@ export const GlobalCooldown = selfWrap(async function GlobalCooldown(user, comma
   return successMsg(this.name, ``, { user, command, remaining, expires: cd.expires, claimableAt: new Date(cd.expires) });
 });
 export const resetAllCooldowns = selfWrap(async function resetAllCooldowns(user) {
-  if (!cooldowns[user]) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!cooldowns[user]) throwError(this.name, `User ${user} not found.`);
   delete cooldowns[user];
   return successMsg(this.name, ``, {
     user,
@@ -2546,7 +2548,7 @@ export const resetAllCooldowns = selfWrap(async function resetAllCooldowns(user)
   });
 });
 export const resetRandomCooldown = selfWrap(async function resetRandomCooldown(user) {
-  if (!cooldowns[user]) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!cooldowns[user]) throwError(this.name, `User ${user} not found.`);
   const cds = cooldowns[user];
   const keys = Object.keys(cds);
   if (keys.length === 0) return null;
@@ -2558,7 +2560,7 @@ export const resetRandomCooldown = selfWrap(async function resetRandomCooldown(u
   });
 });
 export const doubleAllCooldowns = selfWrap(async function doubleAllCooldowns(user) {
-  if (!cooldowns[user]) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!cooldowns[user]) throwError(this.name, `User ${user} not found.`);
   const now = Date.now();
   for (const cmd in cooldowns[user]) {
     const cd = cooldowns[user][cmd];
@@ -2569,10 +2571,10 @@ export const doubleAllCooldowns = selfWrap(async function doubleAllCooldowns(use
 });
 
 export const gambleStreak = selfWrap(async function gambleStreak(user, streak) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   streak = Number(streak);
-  if (!isInteger(streak) || streak < 0) throwError(`${this.name}`, `Invalid streak.`);
+  if (!isInteger(streak) || streak < 0) throwError(this.name, `Invalid streak.`);
   const data = await loadData(user);
   data.streak.gamble = streak;
   await saveData(user, data);
@@ -2582,7 +2584,7 @@ export const gambleStreak = selfWrap(async function gambleStreak(user, streak) {
   });
 });
 export const getGambleStreak = selfWrap(async function getGambleStreak(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   return data.streak.gamble ?? 0;
@@ -2615,10 +2617,10 @@ export const calcNextStreak = selfWrap(async function calcNextStreak(lastClaim, 
   });
 });
 export const dailyStreak = selfWrap(async function dailyStreak(user, streak, lastClaim) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   streak = Number(streak);
-  if (!isInteger(streak) || streak < 0) throwError(`${this.name}`, `Invalid streak.`);
+  if (!isInteger(streak) || streak < 0) throwError(this.name, `Invalid streak.`);
   const data = await loadData(user);
   if (!data.streak.daily) data.streak.daily = {};
   data.streak.daily.streak = streak;
@@ -2632,7 +2634,7 @@ export const dailyStreak = selfWrap(async function dailyStreak(user, streak, las
   });
 });
 export const getDailyStreak = selfWrap(async function getDailyStreak(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   return successMsg(this.name, ``, {
@@ -2642,10 +2644,10 @@ export const getDailyStreak = selfWrap(async function getDailyStreak(user) {
   });
 });
 export const weeklyStreak = selfWrap(async function weeklyStreak(user, streak, lastClaim) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   streak = Number(streak);
-  if (!isInteger(streak) || streak < 0) throwError(`${this.name}`, `Invalid streak.`);
+  if (!isInteger(streak) || streak < 0) throwError(this.name, `Invalid streak.`);
   const data = await loadData(user);
   if (!data.streak.weekly) data.streak.weekly = {};
   data.streak.weekly.streak = streak;
@@ -2659,7 +2661,7 @@ export const weeklyStreak = selfWrap(async function weeklyStreak(user, streak, l
   });
 });
 export const getWeeklyStreak = selfWrap(async function getWeeklyStreak(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   return successMsg(this.name, ``, {
@@ -2669,10 +2671,10 @@ export const getWeeklyStreak = selfWrap(async function getWeeklyStreak(user) {
   });
 });
 export const monthlyStreak = selfWrap(async function monthlyStreak(user, streak, lastClaim) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   streak = Number(streak);
-  if (!isInteger(streak) || streak < 0) throwError(`${this.name}`, `Invalid streak.`);
+  if (!isInteger(streak) || streak < 0) throwError(this.name, `Invalid streak.`);
   const data = await loadData(user);
   if (!data.streak.monthly) data.streak.monthly = {};
   data.streak.monthly.streak = streak;
@@ -2686,7 +2688,7 @@ export const monthlyStreak = selfWrap(async function monthlyStreak(user, streak,
   });
 });
 export const getMonthlyStreak = selfWrap(async function getMonthlyStreak(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const lastClaim = data.streak?.monthly?.lastClaim ?? 0;
@@ -2698,10 +2700,10 @@ export const getMonthlyStreak = selfWrap(async function getMonthlyStreak(user) {
   });
 });
 export const yearlyStreak = selfWrap(async function yearlyStreak(user, streak, lastClaim) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   streak = Number(streak);
-  if (!isInteger(streak) || streak < 0) throwError(`${this.name}`, `Invalid streak.`);
+  if (!isInteger(streak) || streak < 0) throwError(this.name, `Invalid streak.`);
   const data = await loadData(user);
   if (!data.streak.yearly) data.streak.yearly = {};
   data.streak.yearly.streak = streak;
@@ -2715,7 +2717,7 @@ export const yearlyStreak = selfWrap(async function yearlyStreak(user, streak, l
   });
 });
 export const getYearlyStreak = selfWrap(async function getYearlyStreak(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const lastClaim = data.streak?.yearly?.lastClaim ?? 0;
@@ -2728,17 +2730,17 @@ export const getYearlyStreak = selfWrap(async function getYearlyStreak(user) {
 });
 
 export const depositDredcoin = selfWrap(async function depositDredcoin(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (await isMaxBank(user).isMax) throwError(`[!] depositDredcoin: ${user} already has the maximum allowed bank balance.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (await isMaxBank(user).isMax) return errorMsg(this.name, `${user} already has the maximum allowed bank balance.`);
   await initUserObject(user);
   amount = Number(amount);
-  if (!isInteger(amount) || amount <= 0) throwError(`[-] Invalid amount.`);
+  if (!isInteger(amount) || amount <= 0) return errorMsg(`[-] Invalid amount.`);
   const data = await loadData(user);
   data.balance ||= {};
   data.balance.dredcoin ??= 0;
   data.bank ||= {};
   data.bank.balance ??= 0;
-  if (data.balance.dredcoin < amount) return errorMsg(`depositDredcoin`, `${user} doesn't have enough Dredcoin (needs ${amount}).`);
+  if (data.balance.dredcoin < amount) return errorMsg(this.name, `${user} doesn't have enough Dredcoin (needs ${amount}).`);
   const tax = await getTax(amount, user);
   const netDeposit = amount - tax;
   data.balance.dredcoin -= amount;
@@ -2753,23 +2755,23 @@ export const depositDredcoin = selfWrap(async function depositDredcoin(user, amo
   });
 });
 export const withdrawDredcoin = selfWrap(async function withdrawDredcoin(user, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   amount = Number(amount);
-  if (!isInteger(amount) || amount <= 0) throwError(`${this.name}`, `Invalid amount.`);
+  if (!isInteger(amount) || amount <= 0) throwError(this.name, `Invalid amount.`);
   const data = await loadData(user);
   data.balance ||= {};
   data.balance.dredcoin ??= 0;
   data.bank ||= {};
   data.bank.balance ??= 0;
-  if (data.bank.balance < amount) return errorMsg(`withdrawDredcoin`, `${user} doesn't have enough in bank (needs ${amount}).`);
+  if (data.bank.balance < amount) return errorMsg(this.name, `${user} doesn't have enough in bank (needs ${amount}).`);
   const tax = await getTax(amount, user);
   const netWithdraw = amount - tax;
-  if (await isMaxCoin(user).isMax) return `[!] withdrawDredcoin: {user} already has the maximum allowed Dredcoin.`;
+  if (await isMaxCoin(user).isMax) return errorMsg(this.name, `${user} already has the maximum allowed Dredcoin.`);
   const projectedTotal = data.balance.dredcoin + netWithdraw;
   if (config.MAX_DREDCOIN !== false && projectedTotal > config.MAX_DREDCOIN) {
     const allowedAmount = config.MAX_DREDCOIN - data.balance.dredcoin;
-    return `[!] withdrawDredcoin: Cannot withdraw. Limit exceeded. Max allowed: ${allowedAmount}`;
+    return errorMsg(this.name , `Cannot withdraw. Limit exceeded. Max allowed: ${allowedAmount}`);
   }
   data.bank.balance -= amount;
   data.balance.dredcoin += netWithdraw;
@@ -2783,11 +2785,11 @@ export const withdrawDredcoin = selfWrap(async function withdrawDredcoin(user, a
   });
 });
 export const transferDredcoin = selfWrap(async function transferDredcoin(userA, userB, amount) {
-  if (!(await isValidUser(userA))) throwError(`${this.name}`, `Sender '${userA}' not found.`);
-  if (!(await isValidUser(userB))) throwError(`${this.name}`, `Receiver '${userB}' not found.`);
+  if (!(await isValidUser(userA))) throwError(this.name, `Sender '${userA}' not found.`);
+  if (!(await isValidUser(userB))) throwError(this.name, `Receiver '${userB}' not found.`);
   await initUserObject(user);
   amount = Number(amount);
-  if (!isInteger(amount) || amount <= 0) throwError(`${this.name}`, `Invalid amount '${amount}'.`);
+  if (!isInteger(amount) || amount <= 0) throwError(this.name, `Invalid amount '${amount}'.`);
   const dataA = await loadData(userA);
   const dataB = await loadData(userB);
   dataA.balance ||= {};
@@ -2798,15 +2800,15 @@ export const transferDredcoin = selfWrap(async function transferDredcoin(userA, 
   const tax = await getTax(amount, userA);
   const afterTax = amount - tax;
   const { isMax } = await isMaxCoin(userB);
-  if (isMax) return `[!] transferDredcoin: '${userB}' already has the maximum allowed Dredcoin.`;
+  if (isMax) return errorMsg(this.name, `'${userB}' already has the maximum allowed Dredcoin.`);
   const projected = dataB.balance.dredcoin + afterTax;
   if (config.MAX_TRANSFER !== false && projected > config.MAX_TRANSFER) {
     const allowed = config.MAX_TRANSFER - dataB.balance.dredcoin;
-    return `[!] transferDredcoin: '${userB}' can only receive ${allowed} more Dredcoin (MAX_TRANSFER).`;
+    return errorMsg(this.name, `'${userB}' can only receive ${allowed} more Dredcoin (MAX_TRANSFER).`);
   }
   if (config.MAX_DREDCOIN !== false && projected > config.MAX_DREDCOIN) {
     const allowed = config.MAX_DREDCOIN - dataB.balance.dredcoin;
-    return `[!] transferDredcoin: '${userB}' can only receive ${allowed} more Dredcoin (MAX_DREDCOIN).`;
+    return errorMsg(this.name, `'${userB}' can only receive ${allowed} more Dredcoin (MAX_DREDCOIN).`);
   }
   dataA.balance.dredcoin -= amount;
   dataB.balance.dredcoin += afterTax;
@@ -2896,9 +2898,9 @@ export const resolveContainer = selfWrap(async function resolveContainer(invento
   });
 });
 export const createNewItemStack = async (user, itemPath, count, meta) => {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User '${user}' not found.`);
-  if (typeof itemPath !== "string") throwError(`${this.name}`, `Item path must be a string.`);
-  if (count <= 0) throwError(`${this.name}`, `Count must be positive.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User '${user}' not found.`);
+  if (typeof itemPath !== "string") throwError(this.name, `Item path must be a string.`);
+  if (count <= 0) throwError(this.name, `Count must be positive.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inventory = (data.inventory ||= {});
@@ -2931,8 +2933,8 @@ export const createNewItemStack = async (user, itemPath, count, meta) => {
   });
 };
 export const giveItem = selfWrap(async function giveItem(user, itemPath, count = 1) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User '${user}' not found.`);
-  if (typeof itemPath !== "string") throwError(`${this.name}`, `Item path must be a string.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User '${user}' not found.`);
+  if (typeof itemPath !== "string") throwError(this.name, `Item path must be a string.`);
   await initUserObject(user);
   const skillBonuses = await applySkillBoosts(user);
   const bonusChance = Math.min(skillBonuses?.bonusItemChance || 0, 1);
@@ -2941,7 +2943,7 @@ export const giveItem = selfWrap(async function giveItem(user, itemPath, count =
   for (let i = 0; i < count; i++) if (randomNumber() < bonusChance) bonusCount++;
   const totalCount = count + bonusCount;
   const meta = items[itemPath] || {};
-  if (!meta) throwError(`${this.name}`, `Metadata for '${itemPath}' not found.`);
+  if (!meta) throwError(this.name, `Metadata for '${itemPath}' not found.`);
   const result = await createNewItemStack(user, itemPath, totalCount, meta);
   return successMsg(this.name, ``, {
     user,
@@ -2954,9 +2956,9 @@ export const giveItem = selfWrap(async function giveItem(user, itemPath, count =
   });
 });
 export const removeItem = selfWrap(async function removeItem(user, itemPath, count = 1, removeIfZero = true) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User '${user}' not found.`);
-  if (typeof itemPath !== "string") throwError(`${this.name}`, `Item path must be a string.`);
-  if (count <= 0) throwError(`${this.name}`, `Count must be positive.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User '${user}' not found.`);
+  if (typeof itemPath !== "string") throwError(this.name, `Item path must be a string.`);
+  if (count <= 0) throwError(this.name, `Count must be positive.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inventory = (data.inventory ||= {});
@@ -2980,10 +2982,10 @@ export const removeItem = selfWrap(async function removeItem(user, itemPath, cou
   });
 });
 export const transferItem = selfWrap(async function transferItem(userA, userB, itemPath, count = 1) {
-  if (!(await isValidUser(userA))) throwError(`${this.name}`, `Sender '${userA}' not found.`);
-  if (!(await isValidUser(userB))) throwError(`${this.name}`, `Receiver '${userB}' not found.`);
-  if (typeof itemPath !== "string") throwError(`${this.name}`, `Item path must be a string.`);
-  if (count <= 0) throwError(`${this.name}`, `Count must be positive.`);
+  if (!(await isValidUser(userA))) throwError(this.name, `Sender '${userA}' not found.`);
+  if (!(await isValidUser(userB))) throwError(this.name, `Receiver '${userB}' not found.`);
+  if (typeof itemPath !== "string") throwError(this.name, `Item path must be a string.`);
+  if (count <= 0) throwError(this.name, `Count must be positive.`);
   await initUserObject(userA);
   await initUserObject(userB);
   const dataA = await loadData(userA);
@@ -3009,8 +3011,8 @@ export const transferItem = selfWrap(async function transferItem(userA, userB, i
   });
 });
 export const consumeItem = selfWrap(async function consumeItem(user, item, count = 1, options = {}) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!item.consumable) throwError(`${this.name}`, `Item ${item.id || 'unknown'} is not consumable.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!item.consumable) throwError(this.name, `Item ${item.id || 'unknown'} is not consumable.`);
   if (typeof item.count !== 'number') throwError('[-] consumeItem: Invalid item count.');
   await initUserObject(user);
   const preserveAble = item.type === 'consumable' && options.preserveable !== false;
@@ -3031,22 +3033,22 @@ export const consumeItem = selfWrap(async function consumeItem(user, item, count
   });
 });
 export const useItem = selfWrap(async function useItem(user, itemPathOrObj, count = 1, options = {}, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inventory = data?.inventory;
-  if (!inventory) throwError(`${this.name}`, `User ${user} has no inventory`);
+  if (!inventory) throwError(this.name, `User ${user} has no inventory`);
   const { item, pathArray } = resolveItem(inventory, itemPathOrObj);
   if (!item) return errorMsg(`useItem`, `${user} Item not found: ${itemPathOrObj}`);
   const availableCount = typeof item.count === 'number' ? item.count : 1;
   if (availableCount < count) return errorMsg(`useItem`, `${user} Not enough items. Available: ${availableCount}, required: ${count}`);
-  if (!item.id || !item.name || !item.description || !item.rarity || !item.icon || !item.type) throwError(`${this.name}`, `${user} Item missing required fields: ${item.id}`);
+  if (!item.id || !item.name || !item.description || !item.rarity || !item.icon || !item.type) throwError(this.name, `${user} Item missing required fields: ${item.id}`);
   let itemLogic = items[item.id];
   if (!itemLogic) {
     const fallbackKey = Object.keys(items).find(k => k.toLowerCase() === item.id.toLowerCase() || k.toLowerCase().endsWith(`.${item.id.toLowerCase()}`));
     if (fallbackKey) itemLogic = items[fallbackKey];
   }
-  if (!itemLogic?.execute) throwError(`${this.name}`, `No logic found for item ${item.id}`);
+  if (!itemLogic?.execute) throwError(this.name, `No logic found for item ${item.id}`);
   const dep = await resolveDependencies(itemLogic.dependencies, message);
   if (Array.isArray(item.enchants)) {
     for (const e of item.enchants) {
@@ -3078,7 +3080,7 @@ export const useItem = selfWrap(async function useItem(user, itemPathOrObj, coun
   return options.returnValue ? result : undefined;
 });
 export const hasItem = selfWrap(async function hasItem(user, itemPathOrObj, minCount = 1) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inventory = data?.inventory;
@@ -3113,7 +3115,7 @@ export const equipItem = selfWrap(async function equipItem(user, itemPath) {
   });
 });
 export const listItems = selfWrap(async function listItems(user, options = {}) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inventory = data?.inventory;
@@ -3138,11 +3140,11 @@ const item = () => {
   return items;
 };
 export const repairAllItemObject = selfWrap(async function repairAllItemObject(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user: ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user: ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   const inventory = data?.inventory;
-  if (!inventory) throwError(`${this.name}`, `No inventory found for user ${user}`);
+  if (!inventory) throwError(this.name, `No inventory found for user ${user}`);
   const repairedDetails = [];
   const walk = (obj, path = []) => {
     for (const key in obj) {
@@ -3281,9 +3283,9 @@ export const getItemsByRarity = selfWrap(async function getItemsByRarity(categor
   return returnMetadata ? pool.map(([_, meta]) => meta) : pool.map(([id]) => id);
 });
 export const reduceDurability = selfWrap(async function reduceDurability(user, itemPath, amount = 1, removeIfBroken = true) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (typeof itemPath !== 'string') throwError(`${this.name}`, `itemPath must be a string.`);
-  if (amount <= 0) throwError(`${this.name}`, `Amount can't be negative.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (typeof itemPath !== 'string') throwError(this.name, `itemPath must be a string.`);
+  if (amount <= 0) throwError(this.name, `Amount can't be negative.`);
   await initUserObject(user);
   const data = await loadData(user);
   const isEquip = itemPath.startsWith('equipment.');
@@ -3310,15 +3312,15 @@ export const reduceDurability = selfWrap(async function reduceDurability(user, i
 });
 
 export const enchantItem = selfWrap(async function enchantItem(user, itemPath, enchantId, level = 1) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inv = (data.inventory ||= {});
   const { item, pathArray } = resolveItem(inv, itemPath);
   if (!item) return errorMsg(`enchantItem`, `Item not found at '${itemPath}'.`);
-  if (!enchantId || typeof enchantId !== 'string' || !enchants[enchantId]) throwError(`${this.name}`, `Enchant ID '${enchantId}' is invalid or not registered.`);
+  if (!enchantId || typeof enchantId !== 'string' || !enchants[enchantId]) throwError(this.name, `Enchant ID '${enchantId}' is invalid or not registered.`);
   const base = enchants[enchantId];
-  if (typeof base.levelFactory !== 'function') throwError(`${this.name}`, `Enchant '${enchantId}' is missing levelFactory.`);
+  if (typeof base.levelFactory !== 'function') throwError(this.name, `Enchant '${enchantId}' is missing levelFactory.`);
   const maxSlot = item.maxEnchantSlot ?? 1;
   const willReplace = item.enchants?.length >= maxSlot;
   const cost = config.ENCHANT_COST(user, item, enchantId);
@@ -3374,7 +3376,7 @@ export const enchantItem = selfWrap(async function enchantItem(user, itemPath, e
   }
 });
 export const hasEnchant = selfWrap(async function hasEnchant(user, itemPath, enchantId, level = null) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inv = (data.inventory ||= {});
@@ -3423,7 +3425,7 @@ export const enchantToItem = selfWrap(async function enchantToItem(enchantObj) {
   });
 });
 export const useEnchantScroll = selfWrap(async function useEnchantScroll(user, scrollPath, targetItemPath) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inv = data.inventory;
@@ -3443,7 +3445,7 @@ export const useEnchantScroll = selfWrap(async function useEnchantScroll(user, s
   });
 });
 export const getEnchants = selfWrap(async function getEnchants(user, itemPath) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inv = data.inventory;
@@ -3464,7 +3466,7 @@ export const getEnchants = selfWrap(async function getEnchants(user, itemPath) {
   });
 });
 export const resetEnchants = selfWrap(async function resetEnchants(user, itemPath) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inv = data.inventory;
@@ -3481,12 +3483,12 @@ export const resetEnchants = selfWrap(async function resetEnchants(user, itemPat
   });
 });
 export const removeEnchant = selfWrap(async function removeEnchant(user, itemPath, enchantIdOrIndex) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inv = (data.inventory ||= {});
   const { item } = resolveItem(inv, itemPath);
-  if (!item?.enchants) throwError(`${this.name}`, `No enchants found at '${itemPath}'.`);
+  if (!item?.enchants) throwError(this.name, `No enchants found at '${itemPath}'.`);
   if (typeof enchantIdOrIndex === 'number') {
     if (enchantIdOrIndex < 0 || enchantIdOrIndex >= item.enchants.length) return errorMsg(`removeEnchant`, `Invalid enchant index ${enchantIdOrIndex}.`);
     item.enchants.splice(enchantIdOrIndex, 1);
@@ -3527,7 +3529,7 @@ export const resolveInputToDef = selfWrap(async function resolveInputToDef(input
   return null;
 });
 export const getCraftingStatus = selfWrap(async function getCraftingStatus(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const task = data.craftingTask;
@@ -3548,7 +3550,7 @@ export const getCraftingStatus = selfWrap(async function getCraftingStatus(user)
   });
 });
 export const claimCraft = selfWrap(async function claimCraft(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const status = await getCraftingStatus(user);
   if (!status.active) return errorMsg(`claimCraft`, `No active crafting task.`);
@@ -3563,10 +3565,10 @@ export const claimCraft = selfWrap(async function claimCraft(user) {
   });
 });
 export const craftItem = selfWrap(async function craftItem(user, recipeId) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const recipe = getRecipeByIdOrName(recipes.crafting, recipeId);
-  if (!recipe) throwError(`${this.name}`, `Unknown recipe '${recipeId}'.`);
+  if (!recipe) throwError(this.name, `Unknown recipe '${recipeId}'.`);
   const data = await loadData(user);
   if (data.craftingTask) return errorMsg(`craftItem`, `You are already crafting something.`);
   const inv = (data.inventory ||= {});
@@ -3599,7 +3601,7 @@ export const craftItem = selfWrap(async function craftItem(user, recipeId) {
   });
 });
 export const getCookingStatus = selfWrap(async function getCookingStatus(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const task = data.cookingTask;
@@ -3620,7 +3622,7 @@ export const getCookingStatus = selfWrap(async function getCookingStatus(user) {
   });
 });
 export const claimCook = selfWrap(async function claimCook(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const status = await getCookingStatus(user);
   if (!status.active) return errorMsg(`claimCook`, `No active cooking task.`);
@@ -3635,10 +3637,10 @@ export const claimCook = selfWrap(async function claimCook(user) {
   });
 });
 export const cookItem = selfWrap(async function cookItem(user, recipeId) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const recipe = getRecipeByIdOrName(recipes.cooking, recipeId);
-  if (!recipe) throwError(`${this.name}`, `Unknown recipe '${recipeId}'.`);
+  if (!recipe) throwError(this.name, `Unknown recipe '${recipeId}'.`);
   const data = await loadData(user);
   if (data.cookingTask) return errorMsg(`cookItem`, `You are already cooking something.`);
   const inv = (data.inventory ||= {});
@@ -3671,7 +3673,7 @@ export const cookItem = selfWrap(async function cookItem(user, recipeId) {
   });
 });
 export const getMeltingStatus = selfWrap(async function getMeltingStatus(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const task = data.meltingTask;
@@ -3692,7 +3694,7 @@ export const getMeltingStatus = selfWrap(async function getMeltingStatus(user) {
   });
 });
 export const claimMelt = selfWrap(async function claimMelt(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const status = await getMeltingStatus(user);
   if (!status.active) return errorMsg(`claimMelt`, `No active melting task.`);
@@ -3707,10 +3709,10 @@ export const claimMelt = selfWrap(async function claimMelt(user) {
   });
 });
 export const meltItem = selfWrap(async function meltItem(user, recipeId) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const recipe = getRecipeByIdOrName(recipe.melting, recipeId);
-  if (!recipe) throwError(`${this.name}`, `Unknown recipe '${recipeId}'.`);
+  if (!recipe) throwError(this.name, `Unknown recipe '${recipeId}'.`);
   const data = await loadData(user);
   if (data.meltingTask) return errorMsg(`meltItem`, `You are already melting something.`);
   const inv = (data.inventory ||= {});
@@ -3744,8 +3746,8 @@ export const meltItem = selfWrap(async function meltItem(user, recipeId) {
 });
 
 export const disassembleItem = selfWrap(async function disassembleItem(user, itemPath, count = 1) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!isInteger(count) || count < 1) throwError(`${this.name}`, `Invalid count '${count}'.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!isInteger(count) || count < 1) throwError(this.name, `Invalid count '${count}'.`);
   await initUserObject(user);
   const { item } = resolveItem(userInventory, itemPath);
   if (!item) return errorMsg(`disassembleItem`, `Item '${itemPath}' not found.`);
@@ -3786,8 +3788,8 @@ export const disassembleItem = selfWrap(async function disassembleItem(user, ite
   });
 });
 export const disassemblePreview = selfWrap(async function disassemblePreview(user, item) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!item || !item.id) throwError(`${this.name}`, `Invalid item input.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!item || !item.id) throwError(this.name, `Invalid item input.`);
   await initUserObject(user);
   const def = items[item.id];
   if (!def?.disassemble) return false;
@@ -3803,12 +3805,12 @@ export const disassemblePreview = selfWrap(async function disassemblePreview(use
   return final;
 });
 export const reforgeItem = selfWrap(async function reforgeItem(user, itemPath) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inv = (data.inventory ||= {});
   const { item } = resolveItem(inv, itemPath);
-  if (!item) throwError(`${this.name}`, `Item not found at '${itemPath}'.`);
+  if (!item) throwError(this.name, `Item not found at '${itemPath}'.`);
   const current = item.quality || 100;
   if (current === 100) return errorMsg(`reforgeItem`, `'${itemPath}' is already 100% quality.`);
   const cost = config.REFORGE_COST?.(user, item) || { dredcoin: 10000 };
@@ -3852,15 +3854,15 @@ export const formatItemQuality = selfWrap(async function formatItemQuality(quali
 });
 
 export const createTrade = selfWrap(async function createTrade(fromUser, toUser, toUserConfirmed = null) {
-  if (!(await isValidUser(fromUser))) throwError(`${this.name}`, `User ${fromUser} not found.`);
-  if (!(await isValidUser(toUser))) throwError(`${this.name}`, `User ${toUser} not found.`);
-  if (fromUser === toUser) return errorMsg(`${this.name}`, 'You cannot trade with yourself');
+  if (!(await isValidUser(fromUser))) throwError(this.name, `User ${fromUser} not found.`);
+  if (!(await isValidUser(toUser))) throwError(this.name, `User ${toUser} not found.`);
+  if (fromUser === toUser) return errorMsg(this.name, 'You cannot trade with yourself');
   await initUserObject(fromUser);
   await initUserObject(toUser);
   const fromData = await loadData(fromUser);
   const toData = await loadData(toUser);
-  if (fromData.trade?._active) return errorMsg(`${this.name}`, 'You already have an active trade');
-  if (toData.trade?._active) return errorMsg(`${this.name}`, `${toUser} already has an active trade`);
+  if (fromData.trade?._active) return errorMsg(this.name, 'You already have an active trade');
+  if (toData.trade?._active) return errorMsg(this.name, `${toUser} already has an active trade`);
   fromData.trade = {
     _active: true,
     partner: toUser,
@@ -3876,7 +3878,7 @@ export const createTrade = selfWrap(async function createTrade(fromUser, toUser,
   let status = 'pending';
   if (toUserConfirmed === true) status = 'accepted';
   if (toUserConfirmed === false) status = 'declined';
-  return errorMsg(`${this.name}`, `Trade ${status} between ${fromUser} and ${toUser}`, 0o0, {
+  return errorMsg(this.name, `Trade ${status} between ${fromUser} and ${toUser}`, 0o0, {
     fromUser,
     toUser,
     status,
@@ -3923,68 +3925,68 @@ export const addTradeCurrency = selfWrap(async function addTradeCurrency(user, a
   });
 });
 export const cancelTrade = selfWrap(async function cancelTrade(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const data = await loadData(user);
-  if (!data.trade?._active) return errorMsg(`${this.name}`, 'No active trade to cancel');
+  if (!data.trade?._active) return errorMsg(this.name, 'No active trade to cancel');
   const partner = data.trade.partner;
   const partnerData = await loadData(partner);
   data.trade = { _active: false };
   partnerData.trade = { _active: false };
   await saveData(user, data);
   await saveData(partner, partnerData);
-  return successMsg(`${this.name}`, `Trade between ${user} and ${partner} cancelled`, 0o0, { 
+  return successMsg(this.name, `Trade between ${user} and ${partner} cancelled`, 0o0, { 
     user, partner 
   });
 });
 export const confirmTrade = selfWrap(async function confirmTrade(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const data = await loadData(user);
-  if (!data.trade?._active) return errorMsg(`${this.name}`, 'No active trade to confirm');
+  if (!data.trade?._active) return errorMsg(this.name, 'No active trade to confirm');
   data.trade.confirmed = true;
   await saveData(user, data);
   const partner = data.trade.partner;
   const partnerData = await loadData(partner);
-  if (partnerData.trade?.confirmed) return errorMsg(`${this.name}`, `Both users confirmed trade between ${user} and ${partner}.`, 0o0, { 
+  if (partnerData.trade?.confirmed) return errorMsg(this.name, `Both users confirmed trade between ${user} and ${partner}.`, 0o0, { 
     user, 
     partner 
   });
-  return successMsg(`${this.name}`, `${user} confirmed trade, waiting for ${partner}.`, 0o0, { 
+  return successMsg(this.name, `${user} confirmed trade, waiting for ${partner}.`, 0o0, { 
     user, 
     partner 
   });
 });
 export const declineTrade = selfWrap(async function declineTrade(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const data = await loadData(user);
-  if (!data.trade?._active) return errorMsg(`${this.name}`, 'No active trade to decline');
+  if (!data.trade?._active) return errorMsg(this.name, 'No active trade to decline');
   const partner = data.trade.partner;
   const partnerData = await loadData(partner);
   data.trade = { _active: false };
   partnerData.trade = { _active: false };
   await saveData(user, data);
   await saveData(partner, partnerData);
-  return successMsg(`${this.name}`, `Trade between ${user} and ${partner} declined.`, 0o0, { 
+  return successMsg(this.name, `Trade between ${user} and ${partner} declined.`, 0o0, { 
     user, 
     partner 
   });
 });
 export const getActiveTrade = selfWrap(async function getActiveTrade(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const data = await loadData(user);
-  if (!data.trade?._active) return errorMsg(`${this.name}`, 'No active trade found');
+  if (!data.trade?._active) return errorMsg(this.name, 'No active trade found');
   const partner = data.trade.partner;
-  return successMsg(`${this.name}`, 'Active trade retrieved.', 0o0, { 
+  return successMsg(this.name, 'Active trade retrieved.', 0o0, { 
     user, 
     partner, 
     trade: data.trade 
   });
 });
 export const finalizeTrade = selfWrap(async function finalizeTrade(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const data = await loadData(user);
   if (!data.trade?._active) return errorMsg(this.name, 'No active trade');
   const partner = data.trade.partner;
-  if (!(await isValidUser(partner))) throwError(`${this.name}`, `partner ${partner} not found.`);
+  if (!(await isValidUser(partner))) throwError(this.name, `partner ${partner} not found.`);
   const partnerData = await loadData(partner);
   if (!partnerData.trade?._active) return errorMsg(this.name, `${partner} has no active trade`);
   if (!data.trade.confirmed || !partnerData.trade.confirmed) return errorMsg(this.name, 'Both must confirm');
@@ -4028,10 +4030,10 @@ export const finalizeTrade = selfWrap(async function finalizeTrade(user) {
   });
 });
 export const getUserTradeStatus = selfWrap(async function getUserTradeStatus(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const data = await loadData(user);
-  if (!data.trade?._active) return errorMsg(`${this.name}`, 'No active trade', 0o0, { active: false });
-  return successMsg(`${this.name}`, 'User trade status retrieved.', 0o0, {
+  if (!data.trade?._active) return errorMsg(this.name, 'No active trade', 0o0, { active: false });
+  return successMsg(this.name, 'User trade status retrieved.', 0o0, {
     active: true,
     partner: data.trade.partner,
     confirmed: data.trade.confirmed,
@@ -4054,24 +4056,24 @@ export const autoCancelInactiveTrades = selfWrap(async function autoCancelInacti
       cancelled++;
     }
   }
-  return successMsg(`${this.name}`, `Cancelled ${cancelled} inactive trades`, 0o0, { cancelled });
+  return successMsg(this.name, `Cancelled ${cancelled} inactive trades`, 0o0, { cancelled });
 });
 
 export const filterRarity = selfWrap(async function filterRarity(list, maxRarity, category) {
-  if (list == null) throwError(`${this.name}`, `'list' is required.`);
-  if (typeof maxRarity !== 'string') throwError(`${this.name}`, `'maxRarity' must be a string.`);
-  if (!config?.RARITIES || !Array.isArray(config.RARITIES)) throwError(`${this.name}`, `config.RARITIES missing or invalid.`);
+  if (list == null) throwError(this.name, `'list' is required.`);
+  if (typeof maxRarity !== 'string') throwError(this.name, `'maxRarity' must be a string.`);
+  if (!config?.RARITIES || !Array.isArray(config.RARITIES)) throwError(this.name, `config.RARITIES missing or invalid.`);
   const pool = Array.isArray(list) ? list : typeof list === 'object' ? Object.values(list) : null;
-  if (!pool) throwError(`${this.name}`, `'list' must be an array or object.`);
+  if (!pool) throwError(this.name, `'list' must be an array or object.`);
   const maxIndex = config.RARITIES.indexOf(maxRarity.toLowerCase());
   if (maxIndex === -1) return errorMsg(`filterRarity`, `Invalid maxRarity '${maxRarity}'. Valid: ${config.RARITIES.join(', ')}`);
-  if (category !== undefined && category !== null && typeof category !== 'string') throwError(`${this.name}`, `'category' must be a string if provided.`);
+  if (category !== undefined && category !== null && typeof category !== 'string') throwError(this.name, `'category' must be a string if provided.`);
   const cat = category ? category.toLowerCase() : null;
   if (cat && cat !== 'event' && cat !== 'normal') return errorMsg(`filterRarity`, `Invalid category '${category}', expected 'event' or 'normal'.`);
   const result = [];
   for (const e of pool) {
     if (!e || typeof e !== 'object') continue;
-    if ('rarity' in e && e.rarity != null && typeof e.rarity !== 'string') throwError(`${this.name}`, `item has invalid 'rarity' type.`);
+    if ('rarity' in e && e.rarity != null && typeof e.rarity !== 'string') throwError(this.name, `item has invalid 'rarity' type.`);
     if (!e.rarity || typeof e.rarity !== 'string') continue;
     const rIndex = config.RARITIES.indexOf(e.rarity.toLowerCase());
     if (rIndex === -1) continue;
@@ -4086,29 +4088,29 @@ export const filterRarity = selfWrap(async function filterRarity(list, maxRarity
   return result;
 });
 export const pickRandomByRarity = selfWrap(async function pickRandomByRarity(list, maxRarity, category) {
-  if (list == null) throwError(`${this.name}`, `'list' is required.`);
-  if (typeof maxRarity !== 'string') throwError(`${this.name}`, `'maxRarity' must be a string.`);
+  if (list == null) throwError(this.name, `'list' is required.`);
+  if (typeof maxRarity !== 'string') throwError(this.name, `'maxRarity' must be a string.`);
   const filtered = await filterRarity(list, maxRarity, category);
   if (typeof filtered === 'string' && filtered.startsWith('[-]')) return errorMsg(`pickRandomByRarity`, `${filtered}`);
-  if (!Array.isArray(filtered)) throwError(`${this.name}`, `Unexpected result from filterRarity, got ${typeof filtered}.`);
+  if (!Array.isArray(filtered)) throwError(this.name, `Unexpected result from filterRarity, got ${typeof filtered}.`);
   const i = Math.floor(Math.random() * filtered.length);
   return filtered[i];
 });
 
 export const startHatchEgg = selfWrap(async function startHatchEgg(user, eggPath) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
-  if (!eggPath || typeof eggPath !== 'string') throwError(`${this.name}`, `'eggPath' must be a string.`);
+  if (!eggPath || typeof eggPath !== 'string') throwError(this.name, `'eggPath' must be a string.`);
   const data = await loadData(user);
   data.hatching ||= {};
   if (data.hatching.active) return errorMsg(`startHatchEgg`, `user already has an egg hatching.`);
   const { item: egg, pathArray } = resolveItem(data.inventory, eggPath);
   if (!egg) return errorMsg(`startHatchEgg`, `egg '${eggPath}' not found in inventory.`);
-  if (!egg.rarity) throwError(`${this.name}`, `egg missing rarity field.`);
-  if (!egg.hatchTime || typeof egg.hatchTime !== 'number') throwError(`${this.name}`, `egg missing hatchTime field.`);
+  if (!egg.rarity) throwError(this.name, `egg missing rarity field.`);
+  if (!egg.hatchTime || typeof egg.hatchTime !== 'number') throwError(this.name, `egg missing hatchTime field.`);
   if (!egg.hatchable) return errorMsg(`startHatchEgg`, `not a egg or not hatchable.`);
   const removed = await removeItem(user, eggPath, 1);
-  if (!removed) throwError(`${this.name}`, `failed to remove egg from inventory.`);
+  if (!removed) throwError(this.name, `failed to remove egg from inventory.`);
   const start = Date.now();
   const end = start + egg.hatchTime;
   data.hatching = { active: true, egg, start, end };
@@ -4122,10 +4124,10 @@ export const startHatchEgg = selfWrap(async function startHatchEgg(user, eggPath
   });
 });
 export const hatchEgg = selfWrap(async function hatchEgg(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   if (!Array.isArray(pets)) return errorMsg(`hatchEgg`, `'pets' must be an array.`);
-  if (!config?.RARITIES || !Array.isArray(config.RARITIES)) throwError(`${this.name}`, `config.RARITIES missing or invalid.`);
+  if (!config?.RARITIES || !Array.isArray(config.RARITIES)) throwError(this.name, `config.RARITIES missing or invalid.`);
   const data = await loadData(user);
   const hatch = data.hatching;
   if (!hatch?.active) return errorMsg(`hatchEgg`, `no egg is currently hatching.`);
@@ -4142,7 +4144,7 @@ export const hatchEgg = selfWrap(async function hatchEgg(user) {
         const ids = Array.isArray(petIds) ? petIds : [petIds];
         for (const id of ids) {
           const found = pets.find(p => p.id === id);
-          if (!found) throwError(`${this.name}`, `pet with id '${id}' not found in pets list.`);
+          if (!found) throwError(this.name, `pet with id '${id}' not found in pets list.`);
           hatchedPets.push(found);
         }
         break;
@@ -4166,7 +4168,7 @@ export const hatchEgg = selfWrap(async function hatchEgg(user) {
 });
 // REMOVE the current active egg
 export const cancelHatchEgg = selfWrap(async function cancelHatchEgg(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!data.hatching?.active) return errorMsg(`cancelHatchEgg`, `no active hatch to cancel.`);
@@ -4181,12 +4183,12 @@ export const cancelHatchEgg = selfWrap(async function cancelHatchEgg(user) {
 });
 // REFUND the current active egg
 export const refundEggOnCancel = selfWrap(async function refundEggOnCancel(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   if (!data.hatching?.active) return errorMsg(`refundEggOnCancel`, `no active hatch to cancel.`);
   const egg = data.hatching.egg;
-  if (!egg?.id) throwError(`${this.name}`, `egg data invalid, cannot refund.`);
+  if (!egg?.id) throwError(this.name, `egg data invalid, cannot refund.`);
   await giveItem(user, egg.id, 1);
   data.hatching = { active: false };
   await saveData(user, data);
@@ -4197,7 +4199,7 @@ export const refundEggOnCancel = selfWrap(async function refundEggOnCancel(user)
   });
 });
 export const checkHatchStatus = selfWrap(async function checkHatchStatus(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const hatch = data.hatching;
@@ -4211,7 +4213,7 @@ export const checkHatchStatus = selfWrap(async function checkHatchStatus(user) {
   });
 });
 export const listUserEggs = selfWrap(async function listUserEggs(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inventory = data?.inventory;
@@ -4233,8 +4235,8 @@ export const listUserEggs = selfWrap(async function listUserEggs(user) {
 });
 
 export const listItemForSale = selfWrap(async function listItemForSale(user, itemPath, price) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!isInteger(price) || price <= 0 || price > Number.MAX_SAFE_INTEGER) throwError(`${this.name}`, `Invalid price '${price}'.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!isInteger(price) || price <= 0 || price > Number.MAX_SAFE_INTEGER) throwError(this.name, `Invalid price '${price}'.`);
   await initUserObject(user);
   const data = await loadData(user);
   const inv = (data.inventory ||= {});
@@ -4262,7 +4264,7 @@ export const listItemForSale = selfWrap(async function listItemForSale(user, ite
   });
 });
 export const buyListing = selfWrap(async function buyListing(buyer, listingId) {
-  if (!(await isValidUser(buyer))) throwError(`${this.name}`, `Invalid buyer '${buyer}'.`);
+  if (!(await isValidUser(buyer))) throwError(this.name, `Invalid buyer '${buyer}'.`);
   await initUserObject(buyer);
   const listing = getListingById(listingId);
   if (!listing) return errorMsg(`buyListing`, `Listing '${listingId}' not found.`);
@@ -4281,7 +4283,7 @@ export const buyListing = selfWrap(async function buyListing(buyer, listingId) {
   });
 });
 export const cancelListing = selfWrap(async function cancelListing(user, listingId) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user '${user}'.`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user '${user}'.`);
   await initUserObject(user);
   const listing = getListing(listingId);
   if (!listing) return errorMsg(`cancelListing`, `Listing '${listingId}' not found.`);
@@ -4353,12 +4355,12 @@ export const resolveSkill = selfWrap(async function resolveSkill(skills, skillOr
   return searchSkillByIdOrName(skills, skillOrSlot);
 });
 export const giveSkill = selfWrap(async function giveSkill(user, slot, skillId) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const skill = data.skills;
   const def = skills[skillId];
-  if (!def) throwError(`${this.name}`, `Skill not found '${skillId}'.`);
+  if (!def) throwError(this.name, `Skill not found '${skillId}'.`);
   skill[slot] = {
     id: def.id,
     name: def.name,
@@ -4379,12 +4381,12 @@ export const giveSkill = selfWrap(async function giveSkill(user, slot, skillId) 
   });
 });
 export const removeSkill = selfWrap(async function removeSkill(user, slotOrSkillId) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   const skills = data.skills;
   const { skill, slot } = resolveSkill(skills, slotOrSkillId);
-  if (!skill || !slot) throwError(`${this.name}`, `Skill not found: ${slotOrSkillId}`);
+  if (!skill || !slot) throwError(this.name, `Skill not found: ${slotOrSkillId}`);
   delete skills[slot];
   await saveData(user, data);
   return successMsg(this.name, ``, {
@@ -4394,15 +4396,15 @@ export const removeSkill = selfWrap(async function removeSkill(user, slotOrSkill
   });
 });
 export const applySkill = selfWrap(async function applySkill(user, slotOrSkill, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   const Skills = data?.skills;
-  if (!Skills) throwError(`${this.name}`, `No skills found for user ${user}`);
+  if (!Skills) throwError(this.name, `No skills found for user ${user}`);
   const { skill, slot } = resolveSkill(Skills, slotOrSkill);
-  if (!skill || !skill.id) throwError(`${this.name}`, `Invalid skill or slot: ${slotOrSkill}`);
+  if (!skill || !skill.id) throwError(this.name, `Invalid skill or slot: ${slotOrSkill}`);
   const logic = skills[skill.id];
-  if (!logic || typeof logic.execute !== 'function') throwError(`${this.name}`, `No logic defined for skill '${skill.id}'`);
+  if (!logic || typeof logic.execute !== 'function') throwError(this.name, `No logic defined for skill '${skill.id}'`);
   const dep = await resolveDependencies(skill.dependencies, message);
   const executed = await logic.execute(user, skill, dep);
   return successMsg(this.name, ``, {
@@ -4413,7 +4415,7 @@ export const applySkill = selfWrap(async function applySkill(user, slotOrSkill, 
 });
 // List all skill name and id from user
 export const listSkills = selfWrap(async function listSkills(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const skills = data?.skills || {};
@@ -4423,11 +4425,11 @@ export const listSkills = selfWrap(async function listSkills(user) {
 });
 // List all skill boost multipler (listSkillBoost.total) from user by skillBoostList
 export const listSkillBoost = selfWrap(async function listSkillBoost(user, key) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const allBoosts = await applySkillBoosts(user);
   const boostKeys = skillBoostList[key];
-  if (!boostKeys || !Array.isArray(boostKeys)) throwError(`${this.name}`, `key ${key} not found.`);
+  if (!boostKeys || !Array.isArray(boostKeys)) throwError(this.name, `key ${key} not found.`);
   const result = {};
   for (const key of boostKeys) {
     if (allBoosts[key]) result[key] = allBoosts[key];
@@ -4441,7 +4443,7 @@ export const listSkillBoost = selfWrap(async function listSkillBoost(user, key) 
 });
 // return total multiplier from user all skill combine
 export const userAllSkillBoosts = selfWrap(async function userAllSkillBoosts(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user: ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user: ${user}`);
   await initUserObject(user);
   const allBoosts = await applySkillBoosts(user);
   const result = {};
@@ -4474,12 +4476,12 @@ export const allSkillBoosts = selfWrap(async function allSkillBoosts() {
   return result;
 });
 export const giveSkillExp = selfWrap(async function giveSkillExp(user, skillIdOrSlot, amount = 10) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   const skills = data.skills || {};
   const { skill, slot } = resolveSkill(skills, skillIdOrSlot);
-  if (!skill || !slot) throwError(`${this.name}`, `Skill not found: ${skillIdOrSlot}`);
+  if (!skill || !slot) throwError(this.name, `Skill not found: ${skillIdOrSlot}`);
   skill.exp = (skill.exp || 0) + amount;
   while (skill.exp >= skill.expNeeded) {
     if (skill.maxLevel && skill.level >= skill.maxLevel) {
@@ -4497,12 +4499,12 @@ export const giveSkillExp = selfWrap(async function giveSkillExp(user, skillIdOr
   });
 });
 export const giveSkillLv = selfWrap(async function giveSkillLv(user, skillIdOrSlot, newLevel = 1, newExp = 0, newExpNeeded = null) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   const skills = (data.skills ||= {});
   const { skill, slot } = resolveSkill(skills, skillIdOrSlot);
-  if (!skill || !slot) throwError(`${this.name}`, `Skill not found for ${skillIdOrSlot}`);
+  if (!skill || !slot) throwError(this.name, `Skill not found for ${skillIdOrSlot}`);
   skill.level += newLevel;
   if (skill.maxLevel && skill.level > skill.maxLevel) {
     skill.level = skill.maxLevel;
@@ -4517,7 +4519,7 @@ export const giveSkillLv = selfWrap(async function giveSkillLv(user, skillIdOrSl
   });
 });
 export const applySkillBoosts = selfWrap(async function applySkillBoosts(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const skillsData = data.skills || {};
@@ -4543,7 +4545,7 @@ export const applySkillBoosts = selfWrap(async function applySkillBoosts(user) {
   return result;
 });
 export const repairAllSkillObject = selfWrap(async function repairAllSkillObject(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user: ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user: ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   const skillsData = (data.skills ||= {});
@@ -4605,11 +4607,11 @@ export const researchBoostList = {
   search_quality: ['search_quality'],
 };
 export const research = selfWrap(async function research(user, id) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const tree = researchs[id];
-  if (!tree) throwError(`${this.name}`, `ID ${id} not found.`);
+  if (!tree) throwError(this.name, `ID ${id} not found.`);
   const complete = (data.research.complete ||= []);
   const queue = (data.research.queue ||= []);
   const levels = (data.research.levels ||= {});
@@ -4647,7 +4649,7 @@ export const research = selfWrap(async function research(user, id) {
   });
 });
 export const completeResearchQueuesIfCan = selfWrap(async function completeResearchQueuesIfCan(user, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const complete = (data.research.complete ||= []);
@@ -4678,14 +4680,14 @@ export const completeResearchQueuesIfCan = selfWrap(async function completeResea
   });
 });
 export const listResearchBoost = selfWrap(async function listResearchBoost(user, key) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const researchData = data.research || {};
   const complete = researchData.complete || [];
   const result = {};
   const boostKeys = researchBoostList[key];
-  if (!boostKeys || !Array.isArray(boostKeys)) throwError(`${this.name}`, `key ${key} not found.`);
+  if (!boostKeys || !Array.isArray(boostKeys)) throwError(this.name, `key ${key} not found.`);
   for (const boostKey of boostKeys) {
     result[boostKey] = 1;
     for (const researchId of complete) {
@@ -4704,7 +4706,7 @@ export const listResearchBoost = selfWrap(async function listResearchBoost(user,
   });
 });
 export const hasResearch = selfWrap(async function hasResearch(user, id, level) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const completed = data?.research?.complete || [];
@@ -4715,7 +4717,7 @@ export const hasResearch = selfWrap(async function hasResearch(user, id, level) 
   });
 });
 export const drawResearchTree = selfWrap(async function drawResearchTree(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user),
     queue = data.research?.queue || [],
@@ -4999,13 +5001,13 @@ export const cleanOldResearchImages = selfWrap(async function cleanOldResearchIm
 });
 
 export const giveAchievement = selfWrap(async function giveAchievement(user, achievementId) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const Achievements = (data.achievements ||= {});
   if (Achievements[achievementId]) return errorMsg(`giveAchievement`, `Achievement ${achievementId} already given to user ${user}.`);
   const achievement = achievements[achievementId];
-  if (!achievement) throwError(`${this.name}`, `Achievement ${achievementId} not found.`);
+  if (!achievement) throwError(this.name, `Achievement ${achievementId} not found.`);
   Achievements[achievementId] = {
     id: achievement.id,
     name: achievement.name,
@@ -5023,14 +5025,14 @@ export const giveAchievement = selfWrap(async function giveAchievement(user, ach
   });
 });
 export const hasAchievement = selfWrap(async function hasAchievement(user, achievementId) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const achievements = data.achievements || {};
   return achievements.hasOwnProperty(achievementId) && achievements[achievementId].obtained;
 });
 export const listAchievements = selfWrap(async function listAchievements(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   const achievements = data.achievements || {};
@@ -5039,7 +5041,7 @@ export const listAchievements = selfWrap(async function listAchievements(user) {
     .map(([id, ach]) => ({ id, ...ach }));
 });
 export const completeAchievementsIfCan = selfWrap(async function completeAchievementsIfCan(user, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const userAchievements = (data.achievements ||= {});
@@ -5073,13 +5075,13 @@ export const completeAchievementsIfCan = selfWrap(async function completeAchieve
 });
 
 export const isQuestComplete = selfWrap(async function isQuestComplete(user, id) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   return (data.quests?.complete || []).includes(id);
 });
 export const getQuests = selfWrap(async function getQuests(user, { onlyObtainable = true } = {}) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const available = [],
     inProgress = [],
@@ -5154,7 +5156,7 @@ export const getQuestsByType = selfWrap(async function getQuestsByType(type, fil
     .map(([key]) => key);
 });
 export const giveQuest = selfWrap(async function giveQuest(user, key) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   if (isQuestComplete(user, key)) return false;
   await initUserObject(user);
   const data = await loadData(user);
@@ -5164,7 +5166,7 @@ export const giveQuest = selfWrap(async function giveQuest(user, key) {
   return true;
 });
 export const giveRandomQuests = selfWrap(async function giveRandomQuests(user, amount = 1, { category = null, exclude = [], onlyObtainable = true, filter = null } = {}) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const given = [];
   const data = await loadData(user);
@@ -5188,7 +5190,7 @@ export const giveRandomQuests = selfWrap(async function giveRandomQuests(user, a
   return given;
 });
 export const hasQuest = selfWrap(async function hasQuest(user, key) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   if (!key || typeof key !== 'string') return false;
   if (await isQuestComplete(user, key)) return true;
   await initUserObject(user);
@@ -5221,7 +5223,7 @@ export const hasQuest = selfWrap(async function hasQuest(user, key) {
   return true;
 });
 export const completeQuestsIfCan = selfWrap(async function completeQuestsIfCan(user, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
   await initUserObject(user);
   const data = await loadData(user);
   let updated = false;
@@ -5254,20 +5256,20 @@ export const completeQuestsIfCan = selfWrap(async function completeQuestsIfCan(u
   });
 });
 export const completeQuest = selfWrap(async function completeQuest(user, id, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!id) throwError(`${this.name}`, `Missing user or quest ID`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!id) throwError(this.name, `Missing user or quest ID`);
   await initUserObject(user);
   const data = await loadData(user);
   const complete = (data.quests.complete ||= []);
   const quest = quests[id];
-  if (!quest) throwError(`${this.name}`, `Quest ${id} not found.`);
+  if (!quest) throwError(this.name, `Quest ${id} not found.`);
   if (!complete.includes(id)) {
     if (typeof quest.execute === 'function') {
       try {
         const dep = resolveDependencies(quest.dependencies, message);
         await quest.execute(user, quest, dep);
       } catch (err) {
-        throwError(`${this.name}`, `Error executing quest "${id}": ${err.message}`);
+        throwError(this.name, `Error executing quest "${id}": ${err.message}`);
       }
     }
     complete.push(id);
@@ -5276,8 +5278,8 @@ export const completeQuest = selfWrap(async function completeQuest(user, id, mes
   return true;
 });
 export const removeCompleteQuest = selfWrap(async function removeCompleteQuest(user, id) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `Invalid user ${user}`);
-  if (!id) throwError(`${this.name}`, `Missing quest ID`);
+  if (!(await isValidUser(user))) throwError(this.name, `Invalid user ${user}`);
+  if (!id) throwError(this.name, `Missing quest ID`);
   await initUserObject(user);
   const data = await loadData(user);
   const complete = (data.quests.complete ||= []);
@@ -5287,7 +5289,7 @@ export const removeCompleteQuest = selfWrap(async function removeCompleteQuest(u
   return true;
 });
 export const removeQuest = selfWrap(async function removeQuest(user, id) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const completeIdx = data.quests.complete.indexOf(id);
@@ -5311,7 +5313,7 @@ export const seededRandom = selfWrap(async function seededRandom(seed) {
   };
 });
 export const setDailyQuests = selfWrap(async function setDailyQuests(user, amount = 3, filters = {}) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const today = seedToday();
@@ -5333,7 +5335,7 @@ export const setDailyQuests = selfWrap(async function setDailyQuests(user, amoun
   return data.dailyQuests;
 });
 export const completeDailyQuests = selfWrap(async function completeDailyQuests(user, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const today = seedToday();
@@ -5362,7 +5364,7 @@ export const completeDailyQuests = selfWrap(async function completeDailyQuests(u
   });
 });
 export const listDailyQuests = selfWrap(async function listDailyQuests(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const today = seedToday();
@@ -5424,7 +5426,7 @@ export const seedThisWeek = selfWrap(async function seedThisWeek() {
   return `${year}-W${week}`;
 });
 export const setWeeklyQuests = selfWrap(async function setWeeklyQuests(user, amount = 5, filters = {}) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const thisWeek = seedThisWeek();
@@ -5446,7 +5448,7 @@ export const setWeeklyQuests = selfWrap(async function setWeeklyQuests(user, amo
   return data.weeklyQuests;
 });
 export const completeWeeklyQuests = selfWrap(async function completeWeeklyQuests(user, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const thisWeek = seedThisWeek();
@@ -5475,7 +5477,7 @@ export const completeWeeklyQuests = selfWrap(async function completeWeeklyQuests
   });
 });
 export const listWeeklyQuests = selfWrap(async function listWeeklyQuests(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const thisWeek = seedThisWeek();
@@ -5534,7 +5536,7 @@ export const seedThisMonth = selfWrap(async function seedThisMonth() {
   return `${now.getFullYear()}-${now.getMonth() + 1}`;
 });
 export const setMonthlyQuests = selfWrap(async function setMonthlyQuests(user, amount = 8, filters = {}) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const currentMonth = seedThisMonth();
@@ -5556,7 +5558,7 @@ export const setMonthlyQuests = selfWrap(async function setMonthlyQuests(user, a
   return data.monthlyQuests;
 });
 export const completeMonthlyQuests = selfWrap(async function completeMonthlyQuests(user, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const currentMonth = seedMonth();
@@ -5585,7 +5587,7 @@ export const completeMonthlyQuests = selfWrap(async function completeMonthlyQues
   });
 });
 export const listMonthlyQuests = selfWrap(async function listMonthlyQuests(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const currentMonth = seedMonth();
@@ -5643,7 +5645,7 @@ export const seedThisYear = selfWrap(async function seedThisYear() {
   return `${new Date().getFullYear()}`;
 });
 export const setYearlyQuests = selfWrap(async function setYearlyQuests(user, amount = 7, filters = {}) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const year = seedThisYear();
@@ -5665,7 +5667,7 @@ export const setYearlyQuests = selfWrap(async function setYearlyQuests(user, amo
   return data.yearlyQuests;
 });
 export const completeYearlyQuests = selfWrap(async function completeYearlyQuests(user, message) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const year = seedYear();
@@ -5694,7 +5696,7 @@ export const completeYearlyQuests = selfWrap(async function completeYearlyQuests
   });
 });
 export const listYearlyQuests = selfWrap(async function listYearlyQuests(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   await initUserObject(user);
   const data = await loadData(user);
   const year = seedThisYear();
@@ -5849,7 +5851,7 @@ export const isRankEqual = selfWrap(async function isRankEqual(a, b) {
 });
 
 export const donateToClanVault = selfWrap(async function donateToClanVault(user, clan, amount) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const member = clanDB.prepare('SELECT 1 FROM clan_members WHERE user = ? AND clan = ?').get(user, clan);
   if (!member)
     return errorMsg(this.name, `not a member.`, 0, {
@@ -5874,7 +5876,7 @@ export const donateToClanVault = selfWrap(async function donateToClanVault(user,
   });
 });
 export const joinClan = selfWrap(async function joinClan(user, clan, password = null) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const info = clanDB.prepare('SELECT data FROM clans WHERE id = ?').get(clan);
   if (!info)
     return errorMsg(this.name, `clan not found.`, 0, {
@@ -5926,7 +5928,7 @@ export const joinClan = selfWrap(async function joinClan(user, clan, password = 
   });
 });
 export const leaveClan = selfWrap(async function leaveClan(user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const member = clanDB.prepare('SELECT clan FROM clan_members WHERE user = ?').get(user);
   if (!member)
     return errorMsg(this.name, `not a member.`, 0, {
@@ -5940,7 +5942,7 @@ export const leaveClan = selfWrap(async function leaveClan(user) {
   });
 });
 export const changeClanSetting = selfWrap(async function changeClanSetting(user, clan, keyPath, value) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const existing = clanDB.prepare('SELECT * FROM clans WHERE id = ?').get(clan);
   if (!existing || existing.owner !== user)
     return errorMsg(this.name, `not a owner or clan not found.`, 0, {
@@ -5984,8 +5986,8 @@ export const changeClanSetting = selfWrap(async function changeClanSetting(user,
   });
 });
 export const approveJoinRequest = selfWrap(async function approveJoinRequest(requester, clan, user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!(await isValidUser(requester))) throwError(`${this.name}`, `Requester ${requester} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!(await isValidUser(requester))) throwError(this.name, `Requester ${requester} not found.`);
   const info = clanDB.prepare('SELECT * FROM clans WHERE id = ?').get(clan);
   if (!info)
     return errorMsg(this.name, `clan not found.`, {
@@ -6014,8 +6016,8 @@ export const approveJoinRequest = selfWrap(async function approveJoinRequest(req
   });
 });
 export const denyJoinRequest = selfWrap(async function denyJoinRequest(requester, clan, user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!(await isValidUser(requester))) throwError(`${this.name}`, `Requester ${requester} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!(await isValidUser(requester))) throwError(this.name, `Requester ${requester} not found.`);
   const info = clanDB.prepare('SELECT * FROM clans WHERE id = ?').get(clan);
   if (!info)
     return errorMsg(this.name, `clan not found.`, {
@@ -6037,8 +6039,8 @@ export const denyJoinRequest = selfWrap(async function denyJoinRequest(requester
   });
 });
 export const kickMember = selfWrap(async function kickMember(requester, clan, user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!(await isValidUser(requester))) throwError(`${this.name}`, `Requester ${requester} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!(await isValidUser(requester))) throwError(this.name, `Requester ${requester} not found.`);
   const info = clanDB.prepare('SELECT * FROM clans WHERE id = ?').get(clan);
   if (!info)
     return errorMsg(this.name, `clan not found.`, {
@@ -6070,8 +6072,8 @@ export const kickMember = selfWrap(async function kickMember(requester, clan, us
   });
 });
 export const banMember = selfWrap(async function banMember(requester, clan, user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!(await isValidUser(requester))) throwError(`${this.name}`, `Requester ${requester} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!(await isValidUser(requester))) throwError(this.name, `Requester ${requester} not found.`);
   const info = clanDB.prepare('SELECT * FROM clans WHERE id = ?').get(clan);
   if (!info)
     return errorMsg(this.name, `clan not found.`, {
@@ -6098,8 +6100,8 @@ export const banMember = selfWrap(async function banMember(requester, clan, user
   });
 });
 export const unbanMember = selfWrap(async function unbanMember(requester, clan, user) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
-  if (!(await isValidUser(requester))) throwError(`${this.name}`, `Requester ${requester} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
+  if (!(await isValidUser(requester))) throwError(this.name, `Requester ${requester} not found.`);
   const info = clanDB.prepare('SELECT * FROM clans WHERE id = ?').get(clan);
   if (!info)
     return errorMsg(this.name, ``, {
@@ -6141,8 +6143,8 @@ export const listBannedMembers = selfWrap(async function listBannedMembers(clan)
   });
 });
 export const transferClanOwnership = selfWrap(async function transferClanOwnership(currentOwner, clan, newOwner) {
-  if (!(await isValidUser(newOwner))) throwError(`${this.name}`, `New owner ${newOwner} not found.`);
-  if (!(await isValidUser(currentOwner))) throwError(`${this.name}`, `Current owner ${currentOwner} not found.`);
+  if (!(await isValidUser(newOwner))) throwError(this.name, `New owner ${newOwner} not found.`);
+  if (!(await isValidUser(currentOwner))) throwError(this.name, `Current owner ${currentOwner} not found.`);
   const existing = clanDB.prepare('SELECT * FROM clans WHERE id = ?').get(clan);
   if (!existing || existing.owner !== currentOwner)
     return errorMsg(this.name, `not owner or clan not found.`, {
@@ -6161,7 +6163,7 @@ export const transferClanOwnership = selfWrap(async function transferClanOwnersh
   });
 });
 export const isAuthorized = selfWrap(async function isAuthorized(user, clan) {
-  if (!(await isValidUser(user))) throwError(`${this.name}`, `User ${user} not found.`);
+  if (!(await isValidUser(user))) throwError(this.name, `User ${user} not found.`);
   const row = clanDB.prepare('SELECT * FROM clans WHERE id = ?').get(clan);
   if (!row) return false;
   if (row.owner === user) return true;
