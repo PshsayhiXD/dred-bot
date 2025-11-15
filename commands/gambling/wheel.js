@@ -30,12 +30,11 @@ export default {
     const streak = await dep.getGambleStreak(user);
     await dep.removeDredcoin(user, bet);
     const prizes = [
-      { name: "Blue", emoji: "🟦", count: 3, multiplier: 1.5 },
-      { name: "Red", emoji: "🟥", count: 2, multiplier: 3 },
-      { name: "Orange", emoji: "🟧", count: 2, multiplier: 2.5 },
-      { name: "Yellow", emoji: "🟨", count: 7, multiplier: 1 },
-      { name: "Purple", emoji: "🟪", count: 1, multiplier: 5 },
-      { name: "White", emoji: "⬜", count: 1, multiplier: 3.15 },
+      { name: 'Blue', emoji: '🟦', count: 3, multiplier: 1.1 },
+      { name: 'Red', emoji: '🟥', count: 1, multiplier: 1.7 },
+      { name: 'Orange', emoji: '🟧', count: 1, multiplier: 1.3 },
+      { name: 'Yellow', emoji: '🟨', count: 8, multiplier: 1 },
+      { name: 'Black', emoji: '⚫', count: 3, multiplier: 0 },
     ];
     const path = [
       [1,2],[1,3],[1,4],
