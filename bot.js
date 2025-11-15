@@ -87,7 +87,6 @@ await (async function () {
       if (now - msg.timestamp > 5 * 60 * 1000) messageCache.delete(id); // 5m
     }
   }, 60 * 1000);
-
   Middleware(app);
   await createRoute.default(app, { ...db, log, helper }, bot);
   notFound(app);
@@ -253,7 +252,6 @@ await (async function () {
       await db.saveData(username, data);
       try {
         await commands.execute(message, args, username, originalCommand, dependencies);
-        data = await db.loadData(username)
       } finally {
         message.reply = originalReply;
       }
