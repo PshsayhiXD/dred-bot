@@ -21,13 +21,8 @@ const setupCurrentVersion = async (bot) => {
     });
     const msgs = await ch.messages.fetch({ limit: 5 });
     const last = msgs.find(m => m.author.id === bot.user.id && m.embeds.length);
-    if (last) {
-      await last.edit({ embeds: [embed] });
-      log("[currentVersion.js] Updated existing version message.", "success");
-    } else {
-      await ch.send({ embeds: [embed] });
-      log("[currentVersion.js] Sent new version message.", "success");
-    }
+    if (last) await last.edit({ embeds: [embed] });
+    else await ch.send({ embeds: [embed] });
   } catch (err) {
     log(`[currentVersion.js] Error: ${err.stack}`, "error");
   }
