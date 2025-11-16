@@ -5,22 +5,19 @@ export default {
   data: new SlashCommandBuilder()
     .setName('fn')
     .setDescription('Run a func (DEV)')
-    .addStringOption(option =>
-      option.setName('function')
-        .setDescription('func')
-        .setRequired(true)
-    ).addStringOption(option =>
-      option.setName('args')
-        .setDescription('Arguments to pass (space-separated, supports numbers, booleans)')
-        .setRequired(false)
-    ).setContexts(['Guild', 'BotDM', 'PrivateChannel']),
-  dependencies: 'helper commandEmbed commandButtonComponent config',
+    .addStringOption(option => option.setName('function').setDescription('func').setRequired(true))
+    .addStringOption(option => option.setName('args').setDescription('Arguments to pass (space-separated, supports numbers, booleans)').setRequired(false))
+    .setContexts(['Guild', 'BotDM', 'PrivateChannel']),
+  dependencies: 'helper thisFile commandEmbed commandButtonComponent config',
   async execute(interaction, user, dep) {
-    const allowed = dep.helper.Permission(user, "get", "4>=");
+    const allowed = dep.helper.Permission(user, 'get', '4>=');
     if (!allowed) return interaction.reply({ content: '❌ You do not have permission to use this command.', ephemeral: true });
     const funcName = interaction.options.getString('function');
     const rawArgs = interaction.options.getString('args') ?? '';
-    const funcArgs = rawArgs.trim().split(/\s+/).filter(arg => arg.length > 0);
+    const funcArgs = rawArgs
+      .trim()
+      .split(/\s+/)
+      .filter(arg => arg.length > 0);
     const fn = dep.helper[funcName];
     if (typeof fn !== 'function') return interaction.reply({ content: `❌ Function \`${funcName}\` not found.`, ephemeral: true });
     const runFunction = async () => {
@@ -51,7 +48,7 @@ export default {
         image: hasFile ? `attachment://${path.basename(filePath)}` : null,
         user,
         reward: false,
-        message: interaction
+        message: interaction,
       });
       const response = { embeds: [embed] };
       if (hasFile) response.files = [{ attachment: filePath, name: path.basename(filePath) }];
@@ -64,7 +61,7 @@ export default {
         {
           label: '🔁 Run Again',
           style: ButtonStyle.Secondary,
-          onClick: async (btnInteraction) => {
+          onClick: async btnInteraction => {
             if (btnInteraction.user.id !== interaction.user.id) return btnInteraction.reply({ content: '❌ This isn’t your command.', ephemeral: true });
             try {
               const newResponse = await runFunction();
@@ -72,13 +69,13 @@ export default {
             } catch (err) {
               await btnInteraction.reply({ content: `❌ Error: \`${err.message}\``, ephemeral: true });
             }
-          }
-        }
+          },
+        },
       ]);
       return interaction.editReply({ ...response, components: buttons });
     } catch (err) {
-      dep.helper.log(`[/fn] Error: ${err}`, 'error');
-      return interaction.editReply({ content: `❌ [/fn]: \`${err.message}\`` });
+      dep.helper.log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
+      return interaction.editReply({ content: `❌ [${dep.thisFile(import.meta.url)}]: \`${err.message}\`` });
     }
-  }
+  },
 };

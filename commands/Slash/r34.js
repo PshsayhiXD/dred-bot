@@ -1,27 +1,14 @@
-import {
-  SlashCommandBuilder,
-  AttachmentBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ComponentType,
-} from 'discord.js';
+import { SlashCommandBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 import { basename } from 'path';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('r34')
     .setDescription('Get an image or sound from Rule34 by tag/category')
-    .addStringOption(option =>
-      option.setName('tag')
-        .setDescription('Tag to search (e.g. femboy)')
-        .setRequired(true)
-    ).addBooleanOption(option =>
-      option.setName('private')
-        .setDescription('Only you can see the result')
-        .setRequired(false)
-    ).setContexts(['Guild', 'BotDM', 'PrivateChannel']),
-    dependencies: `log`,
+    .addStringOption(option => option.setName('tag').setDescription('Tag to search (e.g. femboy)').setRequired(true))
+    .addBooleanOption(option => option.setName('private').setDescription('Only you can see the result').setRequired(false))
+    .setContexts(['Guild', 'BotDM', 'PrivateChannel']),
+  dependencies: `log thisFile`,
   async execute(interaction, user, dep) {
     const tag = interaction.options.getString('tag');
     const isPrivate = interaction.options.getBoolean('private') ?? false;
@@ -29,26 +16,17 @@ export default {
     const type = interaction.channel?.type;
     const isGuildNonNSFW = interaction.guild && !isNSFW;
     if (isGuildNonNSFW) {
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('confirm_r34')
-          .setLabel('Yes, show it')
-          .setStyle(ButtonStyle.Danger),
-        new ButtonBuilder()
-          .setCustomId('cancel_r34')
-          .setLabel('No, cancel')
-          .setStyle(ButtonStyle.Secondary)
-      );
+      const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('confirm_r34').setLabel('Yes, show it').setStyle(ButtonStyle.Danger), new ButtonBuilder().setCustomId('cancel_r34').setLabel('No, cancel').setStyle(ButtonStyle.Secondary));
       await interaction.reply({
         content: `⚠️ This channel is **not marked NSFW**.\nAre you sure you want to view \`${tag}\` content from Rule34?`,
         components: [row],
-        ephemeral: true
+        ephemeral: true,
       });
       try {
         const confirm = await interaction.channel.awaitMessageComponent({
           componentType: ComponentType.Button,
           time: 15000,
-          filter: i => i.user.id === interaction.user.id
+          filter: i => i.user.id === interaction.user.id,
         });
         if (confirm.customId === 'cancel_r34') return await confirm.update({ content: '❌ Cancelled.', components: [] });
         await confirm.update({ content: 'Fetching content...', components: [] });
@@ -71,11 +49,11 @@ export default {
       const attachment = new AttachmentBuilder(buffer, { name });
       return interaction.editReply({
         content: `\`${tag}\``,
-        files: [attachment]
+        files: [attachment],
       });
     } catch (err) {
-      dep.log(`[/r34] err: ${err}`, 'error');
-      return interaction.editReply({ content: `❌ [/r34]: \`${err.message}\`` });
+      dep.log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
+      return interaction.editReply({ content: `❌ [${dep.thisFile(import.meta.url)}]: \`${err.message}\`` });
     }
-  }
+  },
 };

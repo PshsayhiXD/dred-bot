@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import log from "./logger.js";
 import { chalk } from "./helper.js";
+import thisFile from "./thisFile.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const serialize = (v) => {
@@ -96,7 +97,7 @@ const loadModules = async (dir, validators, defaultValidators) => {
 };
 const main = async () => {
   const validatorDir = path.join(__dirname, "validator");
-  if (!fs.existsSync(validatorDir)) return log(chalk("[validator.js] validator folder not found", "red"), "error");
+  if (!fs.existsSync(validatorDir)) return log(chalk(`[${thisFile(import.meta.url)}] validator folder not found`, "red"), "error");
   const validatorFiles = fs.readdirSync(validatorDir).filter(f => f.endsWith(".js"));
   const validators = {};
   for (const file of validatorFiles) {
@@ -106,7 +107,7 @@ const main = async () => {
       if (!imp.default) continue;
       validators[path.basename(file, ".js")] = typeof imp.default === "function" ? imp.default() : imp.default;
     } catch (e) {
-      log(chalk(`[validator.js] failed to load validator ${file}: ${e.message}`, "red"), "error");
+      log(chalk(`[${thisFile(import.meta.url)}] failed to load validator ${file}: ${e.message}`, "red"), "error");
     }
   }
   const allErrors = [];
@@ -117,7 +118,7 @@ const main = async () => {
     if (name.includes(".")) continue;
     const typeDir = path.join(__dirname, name);
     if (!fs.existsSync(typeDir)) {
-      allErrors.push(`[validator.js] "${name}" folder not found under utils/`);
+      allErrors.push(`[${thisFile(import.meta.url)}] "${name}" folder not found under utils/`);
       continue;
     }
     try {
@@ -125,9 +126,9 @@ const main = async () => {
       allErrors.push(...errors);
       allWarnings.push(...warnings);
       allInfo.push(...info);
-      if (!errors.length && !warnings.length) allSuccess.push(`[validator.js] ${name} validated without issues`);
+      if (!errors.length && !warnings.length) allSuccess.push(`[${thisFile(import.meta.url)}] ${name} validated without issues`);
     } catch (e) {
-      allErrors.push(`[validator.js] failed while validating "${name}": ${e.message}`);
+      allErrors.push(`[${thisFile(import.meta.url)}] failed while validating "${name}": ${e.message}`);
     }
   }
   if (allErrors.length) console.log(await chalk(`\n[Errors]\n${allErrors.join("\n")}`, "red"));

@@ -5,7 +5,7 @@ import paths from "../utils/path.js";
 import log from "../utils/logger.js";
 import { drawShipsCard, fetchShipList, fetchShipFromLink } from "../utils/helper.js";
 import { commandButtonComponent, commandSelectComponent, sendChunks, commandAttachment } from "../utils/commandComponent.js";
-
+import thisFile from "../utils/thisFile.js";
 const activeship = paths.database.active_ship;
 export let submittedLinks = new Map();
 
@@ -15,9 +15,9 @@ export const loadSubmittedLinks = () => {
     const raw = fs.readFileSync(activeship, "utf-8");
     const json = JSON.parse(raw);
     submittedLinks = new Map(Object.entries(json));
-    log(`[shipTracker.js] loaded ${submittedLinks.size} ship links from database.`, "success");
+    log(`[${thisFile(import.meta.url)}] loaded ${submittedLinks.size} ship links from database.`, "success");
   } catch (err) {
-    log(`[shipTracker.js] failed to load submitted links: ${err.message}`, "error");
+    log(`[${thisFile(import.meta.url)}] failed to load submitted links: ${err.message}`, "error");
   }
 };
 
@@ -27,7 +27,7 @@ export const saveSubmittedLinks = () => {
     fs.mkdirSync(path.dirname(activeship), { recursive: true });
     fs.writeFileSync(activeship, JSON.stringify(obj, null, 2));
   } catch (err) {
-    log(`[shipTracker.js] failed to save submitted links: ${err.message}`, "error");
+    log(`[${thisFile(import.meta.url)}] failed to save submitted links: ${err.message}`, "error");
   }
 };
 
@@ -36,7 +36,7 @@ const setupShipTracker = async bot => {
   global.shipTrackerRunning = true;
   loadSubmittedLinks();
   const channel = await bot.channels.fetch(config.ShipTrackerChannelID);
-  if (!channel?.isTextBased()) return log("[setupShipTracker]: Invalid channel.", "warn");
+  if (!channel?.isTextBased()) return log(`[${thisFile(import.meta.url)}]: Invalid channel.`, "warn");
   async function update() {
     const data = await fetchShipList();
     if (!data) return;
@@ -116,7 +116,7 @@ const setupShipTracker = async bot => {
         content: `<t:${ts}:R>`,
       }, false);
     } catch (err) {
-      log(`[shipTracker.js]: ${err.message}`, "error");
+      log(`[${thisFile(import.meta.url)}]: ${err.message}`, "error");
     }
   }
 
@@ -130,7 +130,7 @@ const setupShipTracker = async bot => {
   }, config.SHIP_LINK_REFRESH_INTERVAL * 1000);
   await update();
   setInterval(update, config.SHIP_TRACKER_INTERVAL * 1000);
-  log(`[shipTracker] registered, updates every ${config.SHIP_TRACKER_INTERVAL}s.`, "success");
+  log(`[${thisFile(import.meta.url)}] registered, updates every ${config.SHIP_TRACKER_INTERVAL}s.`, "success");
 };
 
 export default setupShipTracker;

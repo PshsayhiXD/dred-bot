@@ -4,16 +4,10 @@ export default {
   data: new SlashCommandBuilder()
     .setName('spotify')
     .setDescription('Search for a song on Spotify')
-    .addStringOption(option =>
-      option.setName('song')
-        .setDescription('Song name to search for')
-        .setRequired(true)
-    ).addStringOption(option =>
-      option.setName('artist')
-        .setDescription('artist name')
-        .setRequired(false)
-    ).setContexts(['Guild', 'BotDM', 'PrivateChannel']),
-    dependencies: `searchSpotify formatTime commandEmbed log`,
+    .addStringOption(option => option.setName('song').setDescription('Song name to search for').setRequired(true))
+    .addStringOption(option => option.setName('artist').setDescription('artist name').setRequired(false))
+    .setContexts(['Guild', 'BotDM', 'PrivateChannel']),
+  dependencies: `searchSpotify formatTime commandEmbed log thisFIle`,
   async execute(interaction, user, dep) {
     const songName = interaction.options.getString('song');
     const artistName = interaction.options.getString('artist') ?? '';
@@ -21,16 +15,18 @@ export default {
     try {
       const tracks = await dep.searchSpotify(songName, artistName, 10);
       if (!tracks.length) return interaction.editReply({ content: `❌ No results found.` });
-      let exactTrack = tracks.find(track => track.name.toLowerCase() === songName.toLowerCase() && (!artistName || track.artists.some(a =>a.name.toLowerCase().includes(artistName.toLowerCase()))));
+      let exactTrack = tracks.find(track => track.name.toLowerCase() === songName.toLowerCase() && (!artistName || track.artists.some(a => a.name.toLowerCase().includes(artistName.toLowerCase()))));
       const track = exactTrack || tracks[0];
       const bestResult = exactTrack ? '🎵 ' : '🔍 **Best Match:** ';
-      const msToTime = (ms) => {
+      const msToTime = ms => {
         const totalSeconds = Math.floor(ms / 1000);
-        const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const minutes = Math.floor(totalSeconds / 60)
+          .toString()
+          .padStart(2, '0');
         const seconds = (totalSeconds % 60).toString().padStart(2, '0');
         return `${minutes}:${seconds}`;
       };
-      const clock = (duration) => {
+      const clock = duration => {
         const clocks = {
           '00:00': '🕛',
           '01:00': '🕐',
@@ -60,12 +56,12 @@ export default {
         thumbnail: track.album.images[0]?.url || '',
         user,
         reward: true,
-        message: interaction
+        message: interaction,
       });
       return interaction.editReply({ embeds: [embed] });
     } catch (err) {
-      dep.log(`[/spotify] error: ${err.message}`, 'error');
-      return interaction.editReply({ content: `❌ [/spotify]: \`${err.message}\`` });
+      dep.log(`[${dep.thisFile(import.meta.url)}] error: ${err.message}`, 'error');
+      return interaction.editReply({ content: `❌ [${dep.thisFile(import.meta.url)}]: \`${err.message}\`` });
     }
-  }
+  },
 };

@@ -1,0 +1,57 @@
+@use 'variables' as *;
+
+body {
+  background: $bg-gradient;
+  font-family: $font-stack;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: $card-radius;
+    box-shadow: $card-shadow;
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+
+    h4 { color: $text-color-dark; text-align: center; margin-bottom: 1rem; }
+
+    .btn-gradient {
+      background: $btn-gradient;
+      box-shadow: $btn-shadow;
+      border: none;
+      color: $white;
+      transition: background 0.3s ease;
+
+      &:hover, &:focus {
+        background: $btn-gradient-hover;
+        box-shadow: $btn-shadow-hover;
+      }
+    }
+
+    input.form-control {
+      border-radius: $input-radius;
+      border: 1px solid $primary-color;
+      box-shadow: $input-shadow;
+
+      &:focus {
+        border-color: $secondary-color;
+        box-shadow: $input-focus-shadow;
+        outline: none;
+      }
+    }
+
+    label.form-label { color: $text-color-dark; font-weight: 600; }
+
+    .back-link {
+      color: $link-color;
+      margin-top: 1rem;
+      text-align: center;
+      display: block;
+
+      &:hover { color: $link-hover; text-decoration: underline; }
+    }
+  }
+}

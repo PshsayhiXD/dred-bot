@@ -2,8 +2,8 @@ import { commandEmbed } from "../utils/commandComponent.js";
 import config from "../config.js";
 import log from "../utils/logger.js";
 import { getFutureMission, getMissionState } from '../utils/helper.js';
-
-log('[missionTimer.js] THIS TASK IS MEMORY-LEAKING USE AT YOUR OWN RISK', 'warn')
+import thisFile from "../utils/thisFile.js";
+log(`[${thisFile(import.meta.url)}] THIS TASK IS MEMORY-LEAKING USE AT YOUR OWN RISK`, 'warn')
 
 let missionInterval = null;
 let updating = false;
@@ -11,7 +11,7 @@ let updating = false;
 const setupMissionTimer = async (bot) => {
   if (missionInterval) return;
   const channel = await bot.channels.fetch(config.MissionTimerChannelID);
-  if (!channel?.isTextBased()) return log("[setupMissionTimer]: Invalid channel.", "error");
+  if (!channel?.isTextBased()) return log(`[${thisFile(import.meta.url)}]: Invalid channel.`, "error");
   const update = async () => {
     if (updating) return;
     updating = true;
@@ -35,14 +35,14 @@ const setupMissionTimer = async (bot) => {
       if (exist) await exist.edit({ embeds: [embed] });
       else await channel.send({ embeds: [embed] });
     } catch (err) {
-      log(`[setupMissionTimer]: ${err.message}`, "error");
+      log(`[${thisFile(import.meta.url)}]: ${err.message}`, "error");
     } finally {
       updating = false;
     }
   };
   await update();
   missionInterval = setInterval(update, Math.max(config.MISSION_TIMER_INTERVAL || 60, 30) * 1000);
-  log("[setupMissionTimer] registered.", "success");
+  log(`[${thisFile(import.meta.url)}] registered.`, "success");
 };
 
 export default setupMissionTimer;

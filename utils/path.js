@@ -7,7 +7,7 @@ const r = (...segments) => path.resolve(__dirname, "..", ...segments);
 const safeKey = (name) => name.replace(/\W+/g, "_");
 const mapDir = (dirRelative, exts = [".js"]) => {
   const dirPath = r(dirRelative);
-  const result = { root: dirPath };
+  const result = { dirRoot: dirPath };
   if (!fs.existsSync(dirPath)) return result;
   for (const entryName of fs.readdirSync(dirPath)) {
     if (entryName.startsWith(".")) continue;
@@ -27,7 +27,7 @@ const mapDir = (dirRelative, exts = [".js"]) => {
 };
 
 const paths = {
-  root: r(""),
+  dirRoot: r(""),
   bot: r("bot.js"),
   config: r("config.js"),
   ui: r("ui.js"),

@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { helper }  from '../utils/helper.js';
 import log from '../utils/logger.js';
+import thisFile from '../utils/thisFile.js';
 //import { vote, newMissionButtons } from './missionTimer.js';
 import { scheduleDelete } from '../utils/deleteScheduler.js';
 import { saveSubmittedLinks, submittedLinks } from './shipTracker.js';
@@ -324,12 +325,12 @@ const handleInteractionCreate = (bot) => {
         await interaction.reply({ content: `\`\`\`${selectedValue}\`\`\``, ephemeral: true });
       }
     } catch (error) {
-      log(`[interactionCreate.js]: ${error.stack || error}`, 'error');
-      if (interaction.replied || interaction.deferred) await interaction.followUp({ content: `❌ [interactionCreate.js]: \`${error.message}\`.`, ephemeral: true });
-      else await interaction.reply({ content: `❌ [interactionCreate.js]: \`${error.message}\`.`, ephemeral: true });
+      log(`[${thisFile(import.meta.url)}]: ${error.stack || error}`, 'error');
+      if (interaction.replied || interaction.deferred) await interaction.followUp({ content: `❌ [${thisFile(import.meta.url)}]: \`${error.message}\`.`, ephemeral: true });
+      else await interaction.reply({ content: `❌ [${thisFile(import.meta.url)}]: \`${error.message}\`.`, ephemeral: true });
     }
   });
-  log(`[interactionCreate.js] registered.`, "success");
+  log(`[${thisFile(import.meta.url)}] registered.`, "success");
 };
 
 export default handleInteractionCreate;

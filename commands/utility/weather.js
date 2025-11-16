@@ -8,7 +8,7 @@ export default {
   cooldown: 2,
   globalCooldown: 5,
   id: 14,
-  dependencies: `commandEmbed readEnv config`,
+  dependencies: `commandEmbed readEnv config thisFile`,
   execute: async (message, args, user, command, dep) => {
     const city = args.join(' ');
     const apiKey = await dep.readEnv('OPENWEATHER_API_KEY');
@@ -33,12 +33,12 @@ export default {
         color: '#00FF00',
         user,
         reward: false,
-        message
+        message,
       });
       message.reply({ embeds: [embed] });
     } catch (err) {
-      dep.log(`[weather] ${err}`, 'error');
-      message.reply(`❌ [weather]: \`${err.message}\``);
+      dep.log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
+      message.reply(`❌ [${dep.thisFile(import.meta.url)}]: \`${err.message}\``);
     }
   },
 };

@@ -13,13 +13,12 @@ export default {
                  commandButtonComponent commandModal`,
   execute: async (message, args, user, command, dep) => {
     const bank = await dep.getBankBalance(user);
-    const wallet = await dep.getDredcoin(user);
     const parsed = await dep.parseBet(args[0], bank);
     if (parsed.err || parsed.bet <= 0) return message.react("❌");
     const result = await dep.withdrawDredcoin(user, parsed.bet);
     const embed = await dep.commandEmbed({
       title: `${dep.config.PREFIX}${command}`,
-      description:
+      description: result.err ? `❌ **${result.err}**` :
         `✅ **Successfully withdrew \`${await dep.formatAmount(result.withdrawn)}${dep.config.CURRENCY_SYMBOL}\`** (Tax **\`${result.taxed}${dep.config.CURRENCY_SYMBOL}\`**).\n` +
         `💰 Wallet: **\`${await dep.formatAmount(result.walletNow)}${dep.config.CURRENCY_SYMBOL}\`**.\n` +
         `🏛 Bank: **\`${await dep.formatAmount(result.bankRemaining)}${dep.config.CURRENCY_SYMBOL}\`**.`,

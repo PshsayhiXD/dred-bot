@@ -3,35 +3,46 @@ import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
 import https from 'https';
+
 import handleInteractionCreate from './tasks/interactionCreate.js';
+
 import registerPrefixCommands from './commands/command-register.js';
 import registerSlashCommands from './commands/Slash/slash-register.js';
+
 import setupReactionRoles from './tasks/reactionRole.js';
 import setupRegionTimer from './tasks/regionTimer.js';
 import setupNewJoinMember from './tasks/newJoinUser.js';
 import setupLeavingMember from './tasks/leavingMember.js';
-import setupChangelogs from './tasks/changelogs.js';
-import setupMissionTimer from './tasks/missionTimer.js';
+//import setupMissionTimer from './tasks/missionTimer.js';
 import setupShipTracker from './tasks/shipTracker.js';
 import setupCurrentVersion from './tasks/currentVersion.js';
+import setupPvpEvent from './tasks/pvpEvent.js';
+import setupWSS from './wss.js';
+import setupCommandWatcher from './commands/watcher.js';
+
 import { loadAllItems } from './utils/items/index.js';
 import { loadAllSkills } from './utils/skills/index.js';
 import { loadAllResearchs } from './utils/researchs/index.js';
 import { loadAllAchievements } from './utils/achievements/index.js';
 import { loadAllEnchants } from './utils/enchants/index.js';
-import setupPvpEvent from './tasks/pvpEvent.js';
+
 import { sendDashboardEmbed } from './tasks/dashboard.js';
-import setupWSS from './wss.js';
+
 import { getAllCommand, getDupeIdCommands } from './utils/getcommand.js';
+
 import log from './utils/logger.js';
 import config from './config.js';
+import * as db from './utils/db.js';
+import { helper } from './utils/helper.js';
+import { rescheduleAll } from './utils/deleteScheduler.js';
+import thisFile from './utils/thisFile.js';
+
 import { Middleware, notFound } from './middleware/app.js';
+import * as createRoute from './routes/app/index.js';
+
 import { checkMissingArgs, checkMissingPermission } from './commands/command-usage.js';
 import { commandEmbed, commandReRunButton } from './utils/commandComponent.js';
-import * as createRoute from './routes/app/index.js';
-import { helper } from './utils/helper.js';
-import * as db from './utils/db.js';
-import { rescheduleAll } from './utils/deleteScheduler.js';
+
 process.on('unhandledRejection', err => {
   console.error('Unhandled Rejection:', err);
 });
@@ -58,7 +69,7 @@ await (async function () {
     };
   });
   const logAllRoutes = (baseURL = '') => {
-    log('\n[bot.js] Available Routes:', 'title');
+    log(`\n[${thisFile(import.meta.url)}] Available Routes:`, 'title');
     if (!allRoutes.length) return log('  (no routes found)');
     allRoutes.forEach(r => {
       log(`  [${r.method}] ${r.path} → ${baseURL}${r.path}`, 'info');
@@ -95,7 +106,7 @@ await (async function () {
   const server = https.createServer(option, app);
 
   bot.on('clientReady', async () => {
-    log('[bot.js] Client is ready.');
+    log(`[${thisFile(import.meta.url)}] Client is ready.`);
     setInterval(() => helper.cleanOldResearchImages(), config.CLEAN_RESEARCH_TREE_MS);
     await helper.clearGetFileContentFiles();
     await handleInteractionCreate(bot);
@@ -112,14 +123,14 @@ await (async function () {
     await setupRegionTimer(bot);
     await setupNewJoinMember(bot);
     await setupLeavingMember(bot);
-    await setupChangelogs(bot);
     //await setupMissionTimer(bot);
     await setupShipTracker(bot);
     await rescheduleAll(bot);
     await setupCurrentVersion(bot);
+    await setupCommandWatcher(bot);
     const allCommand = await getAllCommand(bot);
     const dupedIdCommand = await getDupeIdCommands(bot);
-    log(`[bot.js] Logged in as ${bot.user.tag} (ID: ${bot.user.id})`);
+    log(`[${thisFile(import.meta.url)}] Logged in as ${bot.user.tag} (ID: ${bot.user.id})`);
     log({ allCommandId: allCommand });
     log({ dupedIdCommands: dupedIdCommand });
     setInterval(() => helper.refundExpiredListings(), config.MARKETPLACE_TICKRATE);
@@ -166,16 +177,12 @@ await (async function () {
         for (let j = 0; j <= b.length; j++) dp[0][j] = j;
         for (let i = 1; i <= a.length; i++) {
           for (let j = 1; j <= b.length; j++) {
-            dp[i][j] = a[i - 1] === b[j - 1]
-              ? dp[i - 1][j - 1]
-              : Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1;
+            dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1;
           }
         }
         return dp[a.length][b.length];
       };
-      return allCommands
-        .map(cmd => ({ cmd, dist: commandDist(cmd, command) }))
-        .sort((a, b) => a.dist - b.dist)[0]?.cmd || null;
+      return allCommands.map(cmd => ({ cmd, dist: commandDist(cmd, command) })).sort((a, b) => a.dist - b.dist)[0]?.cmd || null;
     })();
     if (suggestion && !commands) {
       const embed = await commandEmbed({
@@ -284,11 +291,11 @@ await (async function () {
   process.on('uncaughtException', console.error);
   bot.on('error', console.error);
   bot.on('shardDisconnect', (event, id) => {
-    console.warn(`[bot.js] Shard ${id} disconnected`, event);
+    log(`[${thisFile(import.meta.url)}] Shard ${id} disconnected ${event}`, 'warn');
   });
 
   server.listen(config.HTTPS_PORT, localIP, async () => {
-    log(`[bot.js] Server is running on https://${localIP}:${config.HTTPS_PORT}`);
+    log(`[${thisFile(import.meta.url)}] Server is running on https://${localIP}:${config.HTTPS_PORT}`);
     bot.login(helper.key.DISCORD_BOT_TOKEN);
   });
 

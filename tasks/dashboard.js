@@ -3,11 +3,12 @@ import { helper } from "../utils/helper.js";
 import config from "../config.js";
 import log from "../utils/logger.js";
 import { commandLinkButton } from "../utils/commandComponent.js";
+import thisFile from "../utils/thisFile.js";
 const NGROK = await helper.getNgrokUrl();
 export const sendDashboardEmbed = async client => {
   try {
     const channel = await client.channels.fetch(config.dashboardChannelID);
-    if (!channel) throw new Error("[-] sendDashboardEmbed: Dashboard channel not found!");
+    if (!channel) throw new Error(`[-] ${thisFile(import.meta.url)}: Dashboard channel not found!`);
     const embed = new EmbedBuilder()
       .setTitle("Dashboard")
       .setDescription(`**🔗 [Click to Open Dashboard](${NGROK})**\nOr copy this link:\`\`\`${NGROK}\`\`\``)
@@ -34,7 +35,7 @@ export const sendDashboardEmbed = async client => {
     if (prevMsg) await prevMsg.edit({ embeds: [embed], components });
     else await channel.send({ embeds: [embed], components });
   } catch (err) {
-    log(`[-] Failed to send dashboard embed: ${err}`, "error");
+    log(`[${thisFile(import.meta.url)}] Failed to send dashboard embed: ${err}`, "error");
   }
-  log(`[dashboard.js] registered.`, "success");
+  log(`[${thisFile(import.meta.url)}] registered.`, "success");
 };

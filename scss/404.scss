@@ -1,0 +1,17 @@
+@use 'variables' as *;
+
+.page-404 {
+  body {
+    background: $bg-color;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    font-family: $font-stack;
+
+    h1 { font-size: 5rem; color: $primary-color; }
+    p  { color: $secondary-color; }
+  }
+}

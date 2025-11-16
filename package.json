@@ -1,11 +1,13 @@
 {
+  "name": "dredbot",
+  "version": "v13.0.0",
   "type": "module",
   "main": "localhost.js",
   "scripts": {
     "localhost": "node localhost.js",
     "bot": "node bot.js",
     "validator": "node utils/validator.js",
-    "start": "node localhost.js & node bot.js & node utils/validator.js",
+    "start": "node localhost.js & node bot.js & node commands/watcher.js & node utils/validator.js",
     "setup": "node utils/createFile.js",
     "dev": "nodemon localhost.js"
   },
@@ -31,7 +33,7 @@
     "ws": "^8.18.2"
   },
   "devDependencies": {
+    "chokidar": "^3.6.0",
     "nodemon": "^3.1.7"
-    
   }
 }

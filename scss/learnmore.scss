@@ -1,0 +1,28 @@
+@use 'variables' as *;
+
+body {
+  background: $bg-color;
+  font-family: "Segoe UI", sans-serif;
+  overflow-x: hidden;
+
+  .hero {
+    background: linear-gradient(135deg, #6c63ff 0%, #5b5fdd 50%, #4b52b7 100%);
+    color: $white;
+    text-align: center;
+    padding: 5rem 1rem 4rem;
+
+    h1 { font-size: 3rem; font-weight: 700; }
+    p  { font-size: 1.2rem; opacity: 0.9; max-width: 700px; margin: 1rem auto 2rem; }
+  }
+
+  .features { padding: 4rem 1rem; }
+
+  footer {
+    background: $white;
+    text-align: center;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    font-size: 0.95rem;
+    color: $secondary-color;
+  }
+}

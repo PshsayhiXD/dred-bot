@@ -9,7 +9,7 @@ export default {
   globalCooldown: 1,
   id: 8,
   dependencies: `commandEmbed searchSpotify
-                log formatTime config`,
+                log formatTime config thisFile`,
   execute: async (message, args, user, command, dep) => {
     if (!args.length) {
       const embed = await dep.commandEmbed({
@@ -27,10 +27,10 @@ export default {
     try {
       const tracks = await dep.searchSpotify(songName, artistName, 10);
       if (!tracks.length) return message.reply('❌ No results found.');
-      let exactTrack = tracks.find((track) => track.name.toLowerCase() === songName.toLowerCase() && (!artistName || track.artists.some((a) => a.name.toLowerCase().includes(artistName.toLowerCase()))));
+      let exactTrack = tracks.find(track => track.name.toLowerCase() === songName.toLowerCase() && (!artistName || track.artists.some(a => a.name.toLowerCase().includes(artistName.toLowerCase()))));
       const track = exactTrack || tracks[0];
       const bestresult = exactTrack ? '🎵  ' : '🔍 **Best Match:** ';
-      const msToTime = (ms) => {
+      const msToTime = ms => {
         const totalSeconds = Math.floor(ms / 1000);
         const minutes = Math.floor(totalSeconds / 60)
           .toString()
@@ -38,7 +38,7 @@ export default {
         const seconds = (totalSeconds % 60).toString().padStart(2, '0');
         return `${minutes}:${seconds}`;
       };
-      const clock = (duration) => {
+      const clock = duration => {
         const clocks = {
           '00:00': '🕛',
           '01:00': '🕐',
@@ -60,7 +60,7 @@ export default {
       const embed = await await dep.commandEmbed({
         title: `${dep.config.PREFIX}${command}`,
         description: `
-          ${bestresult}**${track.name}** By **${track.artists.map((artist) => artist.name).join(', ')}**\n
+          ${bestresult}**${track.name}** By **${track.artists.map(artist => artist.name).join(', ')}**\n
           💿 **Album** ${track.album.name}\n
           ${clockEmoji} **Duration** ${dep.formatTime(track.duration_ms)}\n
           🔗 **Link** ${track.external_urls.spotify}
@@ -73,8 +73,8 @@ export default {
       });
       return message.reply({ embeds: [embed] });
     } catch (err) {
-      log(`[spotify] ${err}`, 'error');
-      return message.reply(`❌ [spotify] ${err.message}`);
+      log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
+      return message.reply(`❌ [${dep.thisFile(import.meta.url)}] ${err.message}`);
     }
   },
 };

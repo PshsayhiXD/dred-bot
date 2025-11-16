@@ -4,7 +4,7 @@ import paths from '../utils/path.js';
 import { Collection } from 'discord.js';
 import { pathToFileURL } from 'url';
 import log from '../utils/logger.js';
-
+import thisFile from '../utils/thisFile.js';
 function getCommandFiles(dir) {
   let files = [];
   for (const file of fs.readdirSync(dir)) {
@@ -14,27 +14,24 @@ function getCommandFiles(dir) {
   }
   return files;
 }
-
-async function registerPrefixCommands(bot, selected = 'all') {
-  bot.commands = new Collection();
-  const commandFiles = getCommandFiles(paths.commands.root);
-  for (const filePath of commandFiles) {
+export default async function registerPrefixCommands(bot, selected = 'all') {
+  if (!bot.commands) bot.commands = new Collection();
+  const commandFiles = selected === 'all' ? getCommandFiles(paths.commands.dirRoot) : selected;
+  const filesToLoad = Array.isArray(commandFiles) ? commandFiles : [commandFiles];
+  for (const filePath of filesToLoad) {
     try {
-      const { default: command } = await import(pathToFileURL(filePath).href);
+      const fileUrl = pathToFileURL(filePath).href;
+      delete (await import.meta.resolve(fileUrl));
+      const { default: command } = await import(fileUrl);
       if (!command?.name || typeof command.execute !== 'function') {
-        log(`[registerPrefixCommands] Skipping invalid prefix command: ${filePath}`, 'warn');
-        continue;
-      }
-      if (Array.isArray(selected) && !selected.includes(command.name)) {
-        log(`[registerPrefixCommands] Skipping command not in specified list: ${command.name}`, 'warn');
+        log(`[${thisFile(import.meta.url)}] Skipping invalid prefix command: ${filePath}`, 'warn');
         continue;
       }
       bot.commands.set(command.name, command);
-      log(`[registerPrefixCommands] Loaded prefix command: ${command.name} (${command.id} [${command.aliases?.join(', ') || 'no aliases'}])`, "success");
+      log(`[${thisFile(import.meta.url)}] Loaded/Updated prefix command: ${command.name}`, 'success');
     } catch (err) {
-      log(`[registerPrefixCommands] Failed to load ${filePath}: ${err}`, 'error');
+      log(`[${thisFile(import.meta.url)}] Failed to load ${filePath}: ${err}`, 'error');
     }
   }
-  log(`[registerPrefixCommands] Loaded ${bot.commands.size} command(s).`, "success");
+  if (selected === 'all') log(`[${thisFile(import.meta.url)}] Loaded ${bot.commands.size} prefix command(s).`, 'success');
 }
-export default registerPrefixCommands;

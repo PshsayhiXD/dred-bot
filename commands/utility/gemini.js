@@ -8,7 +8,7 @@ export default {
   globalCooldown: 1,
   perm: 0,
   id: 13,
-  dependencies: `commandEmbed readEnv log config`,
+  dependencies: `commandEmbed readEnv log config thisFile`,
   execute: async (message, args, user, command, dep) => {
     const input = args.join(' ');
     const embed = await dep.commandEmbed({
@@ -26,19 +26,19 @@ export default {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: input }] }]
-        })
+          contents: [{ parts: [{ text: input }] }],
+        }),
       });
       if (!res.ok) {
         const err = await res.text();
-        log(`[gemini] ${err}`, 'error');
+        log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
         reply = '❌ Failed to get a response from Gemini.';
       } else {
         const json = await res.json();
         reply = json.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
       }
     } catch (err) {
-      log(`[gemini] ${err}`, 'error');
+      log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
       reply = '❌ An unexpected error occurred while contacting Gemini.';
     }
     const resultEmbed = await dep.commandEmbed({
@@ -49,5 +49,5 @@ export default {
       message,
     });
     return sent.edit({ embeds: [resultEmbed] });
-  }
+  },
 };

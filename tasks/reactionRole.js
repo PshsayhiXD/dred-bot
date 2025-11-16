@@ -1,9 +1,10 @@
 import config from "../config.js";
 import log from "../utils/logger.js";
 import { commandButtonComponent, commandEmbed } from "../utils/commandComponent.js";
+import thisFile from "../utils/thisFile.js";
 const setupReactionRoles = async (bot) => {
   const channel = await bot.channels.fetch(config.reactionRoleChannelID).catch(() => null);
-  if (!channel?.isTextBased()) return log("[reactionRole] Invalid channel", "warn");
+  if (!channel?.isTextBased()) return log(`[${thisFile(import.meta.url)}] Invalid channel`, "warn");
   const messages = await channel.messages.fetch({ limit: 10 }).catch(() => []);
   const existing = messages.find(m => m.author.id === bot.user.id && m.embeds.length > 0);
   const fields = Object.values(config.ReactionRoles).map(({ label, role }) => ({
@@ -27,7 +28,7 @@ const setupReactionRoles = async (bot) => {
   const rows = await commandButtonComponent(buttonDefs);
   if (existing) await existing.edit({ embeds: [embed], components: rows });
   else await channel.send({ embeds: [embed], components: rows });
-  log(`[reactionRole.js] registered.`, "success");
+  log(`[${thisFile(import.meta.url)}] registered.`, "success");
 };
 
 export default setupReactionRoles;

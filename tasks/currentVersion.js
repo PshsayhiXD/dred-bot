@@ -2,16 +2,17 @@ import { commandEmbed } from "../utils/commandComponent.js";
 import { version } from "../version.js";
 import config from "../config.js";
 import log from "../utils/logger.js";
+import thisFile from "../utils/thisFile.js";
 const setupCurrentVersion = async (bot) => {
   const channelId = config.CurrentVersionChannelID;
-  if (!channelId) return log("[currentVersion.js] No CurrentVersionChannelID in config.", "warn");
+  if (!channelId) return log(`[${thisFile(import.meta.url)}] No CurrentVersionChannelID in config.`, "warn");
   const guild = bot.guilds.cache.get(config.GUILD_ID);
-  if (!guild) return log("[currentVersion.js] Guild not found.", "warn");
+  if (!guild) return log(`[${thisFile(import.meta.url)}] Guild not found.`, "warn");
   const ch = guild.channels.cache.get(channelId);
-  if (!ch?.isTextBased?.()) return log("[currentVersion.js] Channel not found or not text-based.", "warn");
+  if (!ch?.isTextBased?.()) return log(`[${thisFile(import.meta.url)}] Channel not found or not text-based.`, "warn");
   try {
     const summary = await version();
-    log(`[currentVersion.js] ${summary}`, "success");
+    log(`[${thisFile(import.meta.url)}] ${summary}`, "success");
     const embed = await commandEmbed({
       title: "📦 Current Version",
       description: `\`\`\`${summary}\`\`\``,
@@ -24,8 +25,8 @@ const setupCurrentVersion = async (bot) => {
     if (last) await last.edit({ embeds: [embed] });
     else await ch.send({ embeds: [embed] });
   } catch (err) {
-    log(`[currentVersion.js] Error: ${err.stack}`, "error");
+    log(`[${thisFile(import.meta.url)}] Error: ${err.stack}`, "error");
   }
-  log("[currentVersion.js] registered.", "success");
+  log(`[${thisFile(import.meta.url)}] registered.`, "success");
 };
 export default setupCurrentVersion;

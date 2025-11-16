@@ -15,7 +15,7 @@ const hashFolder = (item) => {
       for (const f of fs.readdirSync(item)) hash.update(hashFolder(`${item}/${f}`));
     } else if (stat.isFile()) hash.update(cleanContent(fs.readFileSync(item, "utf8")));
   } else if (typeof item === "object") {
-    if (item.root && fs.existsSync(item.root) && !shouldIgnore(item.root)) hash.update(hashFolder(item.root));
+    if (item.dirRoot && fs.existsSync(item.dirRoot) && !shouldIgnore(item.dirRoot)) hash.update(hashFolder(item.dirRoot));
     for (const k in item) if (k !== "root" && item[k]) hash.update(hashFolder(item[k]));
   }
   return hash.digest("hex");
@@ -34,6 +34,7 @@ export const version = async () => {
     { obj: paths.config, weight: 2 },
     { obj: paths.version, weight: 2 },
     { obj: paths.wss, weight: 2 },
+    { obj: paths.scss, weight: 1},
     { obj: paths.localhost, weight: 1 },
     { obj: paths.public.language, weight: 1 },
   ];
@@ -56,8 +57,8 @@ export const version = async () => {
     const hash = hashFolder(obj);
     const name = typeof obj === "string"
       ? obj.split(/[\\/]/).pop()
-      : obj.root
-        ? obj.root.split(/[\\/]/).pop()
+      : obj.dirRoot
+        ? obj.dirRoot.split(/[\\/]/).pop()
         : "unknown";
     newHashes[name] = hash;
     if (hash !== data.hashes[name]) {

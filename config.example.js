@@ -86,6 +86,7 @@ const config = {
   RESEARCH_SHOW_REQUIREMENTS: true, // false to disable or true to enable showing research requirements in research tree
   CLEAN_RESEARCH_TREE_MS: 30000, // time in ms to clean research tree cache
   MAX_CHANGELOG_AGE: 3,          // days
+  SKIP_CHANGELOG_FIRST_RUN: true,// skip sending if total file >= scanned files
   PROXY_URL: 'http://localhost:8080', // Proxy url if u use that
   GUILD_ID: '0',
   NEWMEMBER_ROLEID: '0',

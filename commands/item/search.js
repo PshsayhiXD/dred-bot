@@ -5,16 +5,17 @@ export default {
   usage: '',
   category: 'item',
   perm: 0,
-  cooldown: async function(user, data) {
-    const baseCooldown = 10 * 60 * 1000;
-    const searchCooldownMultiplier = data.stats.search_cooldown || 1;
+  cooldown: async function(user, data, dep) {
+    const baseCooldown = 60;
+    const searchCooldownMultiplier = data.stats?.search_cooldown || 4;
     return baseCooldown / searchCooldownMultiplier;
   },
   globalCooldown: 1,
   id: 17,
-  dependencies: `giveItem commandEmbed config formatTime 
+  dependencies: `giveItem commandEmbed config formatTime log 
                  formatAmount getRandomItemByChance loadData
-                 commandButtonComponent Cooldown newCooldown`,
+                 commandButtonComponent Cooldown newCooldown
+                 runCommand `,
   execute: async (message, args, user, command, dep) => {
     const data = await dep.loadData(user);
     const search = async () => {

@@ -1,80 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dredbot</title>
-  <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body {
-      background: linear-gradient(135deg, #74b9ff, #a29bfe);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 1rem;
-      box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
-      width: 100%;
-      max-width: 400px;
-      padding: 2rem;
-    }
-    .btn-gradient {
-      background: linear-gradient(45deg, #74b9ff, #0984e3);
-      border: none;
-      color: white;
-      box-shadow: 0 4px 15px rgba(9, 132, 227, 0.4);
-      transition: background 0.3s ease;
-    }
-    .btn-gradient:hover,
-    .btn-gradient:focus {
-      background: linear-gradient(45deg, #0984e3, #74b9ff);
-      box-shadow: 0 6px 20px rgba(9, 132, 227, 0.6);
-      color: white;
-    }
-    input.form-control {
-      box-shadow: inset 0 1px 4px rgba(9, 132, 227, 0.2);
-      border: 1px solid #74b9ff;
-      border-radius: 0.375rem;
-    }
-    input.form-control:focus {
-      box-shadow: 0 0 8px rgba(9, 132, 227, 0.6);
-      border-color: #0984e3;
-      outline: none;
-    }
-    label.form-label {
-      color: #2d3436;
-      font-weight: 600;
-    }
-    .back-link {
-      display: block;
-      margin-top: 1rem;
-      text-align: center;
-      color: #40739e;
-    }
-    .back-link:hover {
-      text-decoration: underline;
-      color: #273c75;
-    }
-  </style>
+  <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="styles/forgotpass.css" rel="stylesheet">
 </head>
 <body>
   <div class="card shadow">
-    <h4 class="text-center mb-4" style="color:#2d3436;">Forgot Your Password?</h4>
+    <h4>Forgot Your Password?</h4>
     <form id="forgotPasswordForm">
       <div class="mb-3">
         <label for="username" class="form-label">Enter your username</label>
-        <input type="text" class="form-control" id="username" placeholder="Username" required />
+        <input type="text" class="form-control" id="username" placeholder="Username" required>
       </div>
       <button type="submit" class="btn btn-gradient w-100">Reset Password</button>
     </form>
     <a href="/homepage.html" class="back-link">← Back to login</a>
   </div>
   <script nonce="dredbot">
-    document.getElementById('forgotPasswordForm').addEventListener('submit', async function (e) {
+    document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const username = document.getElementById('username').value;
       try {

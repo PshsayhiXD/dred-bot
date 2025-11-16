@@ -4,12 +4,9 @@ export default {
   data: new SlashCommandBuilder()
     .setName('weather')
     .setDescription('Get the current weather for a city.')
-    .addStringOption(option =>
-      option.setName('city')
-        .setDescription('City name')
-        .setRequired(true)
-    ).setContexts(['Guild', 'BotDM', 'PrivateChannel']),
-    dependencies: `readEnv commandEmbed log`,
+    .addStringOption(option => option.setName('city').setDescription('City name').setRequired(true))
+    .setContexts(['Guild', 'BotDM', 'PrivateChannel']),
+  dependencies: `readEnv commandEmbed log thisFile`,
   async execute(interaction, user, dep) {
     const city = interaction.options.getString('city');
     const apiKey = await dep.readEnv('OPENWEATHER_API_KEY');
@@ -33,12 +30,12 @@ export default {
           🕒 **Last update**: ${new Date(data.dt * 1000).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}`,
         reward: false,
         user,
-        message: interaction
+        message: interaction,
       });
       interaction.editReply({ embeds: [embed] });
     } catch (err) {
-      dep.log(`[/weather] ${err}`, 'error');
-      return interaction.editReply({ content: `❌ [/weather]: \`${err.message}\``});
+      dep.log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
+      return interaction.editReply({ content: `❌ [${dep.thisFile(import.meta.url)}]: \`${err.message}\`` });
     }
-  }
+  },
 };

@@ -1,18 +1,18 @@
 import { commandEmbed } from "../utils/commandComponent.js";
 import log from "../utils/logger.js";
 import config from "../config.js";
-
+import thisFile from "../utils/thisFile.js";
 const setupNewJoinMember = async (bot) => {
   const roleId = config.NEWMEMBER_ROLEID;
   const welcomeChannelId = config.WelcomeChannelID;
   bot.on("guildMemberAdd", async (member) => {
     const role = member.guild.roles.cache.get(roleId);
-    if (!role) return log(`[setupNewJoinMember]: ${roleId} not found.`, "warn");
+    if (!role) return log(`[${thisFile(import.meta.url)}]: ${roleId} not found.`, "warn");
     try {
       await member.roles.add(role);
-      log(`[+] Assigned role to ${member.user.tag}`, "success");
+      log(`[${thisFile(import.meta.url)}] Assigned role to ${member.user.tag}`, "success");
     } catch (err) {
-      log(`[-] Failed to assign role to ${member.user.tag}: ${err}`, "error");
+      log(`[${thisFile(import.meta.url)}] Failed to assign role to ${member.user.tag}: ${err}`, "error");
     }
     const welcomeChannel = member.guild.channels.cache.get(welcomeChannelId);
     if (!welcomeChannel?.isTextBased?.()) return;
@@ -36,19 +36,19 @@ const setupNewJoinMember = async (bot) => {
   const guild = bot.guilds.cache.get(config.GUILD_ID);
   if (!guild) return;
   const role = guild.roles.cache.get(roleId);
-  if (!role) return log(`[!] Role ${roleId} not found.`, "warn");
+  if (!role) return log(`[${thisFile(import.meta.url)}] Role ${roleId} not found.`, "warn");
   const members = await guild.members.fetch();
   const toUpdate = members.filter(m => !m.user.bot && !m.roles.cache.has(roleId));
-  log(`[+] Assigning role to ${toUpdate.size} members.`, "success");
+  log(`[${thisFile(import.meta.url)}] Assigning role to ${toUpdate.size} members.`, "success");
   for (const member of toUpdate.values()) {
     try {
       await member.roles.add(role);
-      log(`[+] Assigned role to ${member.user.tag}.`, "success");
+      log(`[${thisFile(import.meta.url)}] Assigned role to ${member.user.tag}.`, "success");
     } catch (err) {
-      log(`[!!] Failed to assign role to ${member.user.tag}: ${err.message}`, "warn");
+      log(`[${thisFile(import.meta.url)}] Failed to assign role to ${member.user.tag}: ${err.message}`, "warn");
     }
   }
-  log(`[newJoinUser.js] registered.`, "success");
+  log(`[${thisFile(import.meta.url)}] registered.`, "success");
 };
 
 export default setupNewJoinMember;

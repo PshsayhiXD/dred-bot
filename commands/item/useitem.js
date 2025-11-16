@@ -8,7 +8,7 @@ export default {
   cooldown: 10,
   globalCooldown: 1,
   id: 16,
-  dependencies: `log hasItem useItem config formatAmount
+  dependencies: `log hasItem useItem config formatAmount thisFile
                  commandEmbed commandButtonComponent runCommand`,
   execute: async (message, args, user, command, dep) => {
     const countArg = await dep.formatAmount(args[args.length - 1]);
@@ -49,9 +49,9 @@ export default {
               emoji: '🎒',
               onClick: async btn => {
                 if (btn.user.id !== message.author.id) return;
-                const label = btn.component.label.toLowerCase().replace(/\s+/g, "");
-                await dep.runCommand(message.client, message, `${dep.config.PREFIX}${label}`)
-              }
+                const label = btn.component.label.toLowerCase().replace(/\s+/g, '');
+                await dep.runCommand(message.client, message, `${dep.config.PREFIX}${label}`);
+              },
             },
             {
               label: 'Use Another Item',
@@ -98,8 +98,8 @@ export default {
           return message.react('✅');
         }
       } catch (err) {
-        dep.log(`[useitem] ${err}`, 'error');
-        return message.reply(`❌ [useitem]: \`${err.message}\``);
+        dep.log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
+        return message.reply(`❌ [${dep.thisFile(import.meta.url)}]: \`${err.message}\``);
       }
     };
     return useItem();

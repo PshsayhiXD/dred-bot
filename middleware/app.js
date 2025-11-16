@@ -65,8 +65,8 @@ export const Middleware = (app) => {
   app.get("/", (req, res) => {
     res.sendFile(paths.public.homepage);
   });
-  app.use(express.static(paths.public.root));
-  app.use("/language", express.static(paths.public.language.root));
+  app.use(express.static(paths.public.dirRoot));
+  app.use("/language", express.static(paths.public.language.dirRoot));
 };
 export const notFound = (app) => {
   app.use((req, res) => {

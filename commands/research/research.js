@@ -8,7 +8,8 @@ export default {
   cooldown: 5,
   globalCooldown: 0,
   id: 48,
-  dependencies: `research commandEmbed config log commandButtonComponent runCommand`,
+  dependencies: `research commandEmbed config thisFile 
+                 log commandButtonComponent runCommand`,
   execute: async (message, args, user, command, dep) => {
     const id = args[0];
     const run = async (interaction = null) => {
@@ -84,12 +85,12 @@ export default {
         if (interaction) return interaction.update({ embeds: [embed], components: buttons, content: '' });
         return message.reply({ embeds: [embed], components: buttons });
       } catch (err) {
-        dep.log(`[research] ${err}`, 'error');
-        if (interaction) return interaction.update({ content: `❌ [research]: \`${err.message}\``, embeds: [], components: [] });
-        return message.reply(`❌ [research]: \`${err.message}\``);
+        dep.log(`[${dep.thisFile(import.meta.url)}] ${err}`, 'error');
+        if (interaction) return interaction.update({ content: `❌ [${dep.thisFile(import.meta.url)}]: \`${err.message}\``, embeds: [], components: [] });
+        return message.reply(`❌ [${dep.thisFile(import.meta.url)}]: \`${err.message}\``);
       }
     };
-    if (!id) return message.reply(`❌ Usage: \`${dep.config.PREFIX}${command} <researchId>\``);
+    if (!id) return message.react(`❔`);
     return run();
   },
 };

@@ -4,12 +4,9 @@ export default {
   data: new SlashCommandBuilder()
     .setName('gemini')
     .setDescription('Ask Gemini flash 1.5 latest a question')
-    .addStringOption(option =>
-      option.setName('prompt')
-        .setDescription('Your question to Gemini')
-        .setRequired(true)
-    ).setContexts(['Guild', 'BotDM', 'PrivateChannel']),
-    dependencies: `commandEmbed readEnv log`,
+    .addStringOption(option => option.setName('prompt').setDescription('Your question to Gemini').setRequired(true))
+    .setContexts(['Guild', 'BotDM', 'PrivateChannel']),
+  dependencies: `commandEmbed readEnv log thisFile`,
   async execute(interaction, user, dep) {
     const input = interaction.options.getString('prompt');
     const key = await dep.readEnv('GEMINI_API_KEY');
@@ -28,19 +25,19 @@ export default {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: input }] }]
-        })
+          contents: [{ parts: [{ text: input }] }],
+        }),
       });
       if (!res.ok) {
         const err = await res.text();
-        dep.log(`[/gemini res] ${err}`, 'error');
+        dep.log(`[${dep.thisFile(import.meta.url)} res] ${err}`, 'error');
         reply = '❌ Failed to get a response from Gemini.';
       } else {
         const json = await res.json();
         reply = json.candidates?.[0]?.content?.parts?.[0]?.text || '❌ No response received.';
       }
     } catch (err) {
-      dep.log(`[/gemini] ${err.message}`, 'error');
+      dep.log(`[${dep.thisFile(import.meta.url)}] ${err.message}`, 'error');
       reply = '❌ An unexpected error occurred while contacting Gemini.';
     }
     const resultEmbed = await dep.commandEmbed({
@@ -51,5 +48,5 @@ export default {
       message: interaction,
     });
     return interaction.editReply({ embeds: [resultEmbed] });
-  }
+  },
 };

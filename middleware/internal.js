@@ -14,8 +14,8 @@ const localIP = await helper.getLocalIP();
 export const Middleware = async (app) => {
   app.use(cors(corsOptions));
   app.use(express.json());
-  app.use('/bootstrap', express.static(paths.public.bootstrap.root));
-  app.use(express.static(paths.public.root));
+  app.use('/bootstrap', express.static(paths.public.bootstrap.dirRoot));
+  app.use(express.static(paths.public.dirRoot));
   app.use(express.urlencoded({ extended: true }));
   app.use(helmet());
   app.use(async (req, res, next) => {
