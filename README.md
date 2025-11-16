@@ -82,7 +82,7 @@ Inspired by the gameplay and community mechanics of [**drednot.io**](https://dre
 ### Development Dependencies
 
 - **Nodemon**: Development auto-restart
-
+- **Chokidar**: Stalk your files
 - Optional: **SSL key and certificate** (for HTTPS support in the web dashboard)
 
 ## 📋 Prerequisites
