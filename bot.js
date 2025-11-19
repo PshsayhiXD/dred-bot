@@ -18,13 +18,18 @@ import setupShipTracker from './tasks/shipTracker.js';
 import setupCurrentVersion from './tasks/currentVersion.js';
 import setupPvpEvent from './tasks/pvpEvent.js';
 import setupWSS from './wss.js';
-import setupCommandWatcher from './commands/watcher.js';
+import setupCommandWatcher from './utils/watcher.js';
 
 import { loadAllItems } from './utils/items/index.js';
 import { loadAllSkills } from './utils/skills/index.js';
 import { loadAllResearchs } from './utils/researchs/index.js';
 import { loadAllAchievements } from './utils/achievements/index.js';
 import { loadAllEnchants } from './utils/enchants/index.js';
+import { loadAllRanks } from './utils/ranks/index.js';
+import { loadAllRecipes } from './utils/recipes/index.js';
+import { loadAllQuests } from './utils/quests/index.js';
+import { loadAllPets } from './utils/pets/index.js';
+import { loadAllJobs } from './utils/jobs/index.js';
 
 import { sendDashboardEmbed } from './tasks/dashboard.js';
 
@@ -78,8 +83,8 @@ await (async function () {
 
   const localIP = await helper.getLocalIP();
   const option = {
-    key: await helper.readText(config.SSL_KEY_PATH),
-    cert: await helper.readText(config.SSL_CERT_PATH),
+    key: await db.readText(config.SSL_KEY_PATH),
+    cert: await db.readText(config.SSL_CERT_PATH),
     passphrase: config.CERT_PASSPHRASE,
   };
   const bot = new Client({
@@ -116,6 +121,11 @@ await (async function () {
     await loadAllEnchants();
     await loadAllResearchs();
     await loadAllAchievements();
+    await loadAllRanks();
+    await loadAllRecipes();
+    await loadAllQuests();
+    await loadAllPets();
+    await loadAllJobs();
     await registerSlashCommands(bot, 'n');
     await registerPrefixCommands(bot, 'all');
     await setupReactionRoles(bot);
@@ -135,7 +145,7 @@ await (async function () {
     log({ dupedIdCommands: dupedIdCommand });
     setInterval(() => helper.refundExpiredListings(), config.MARKETPLACE_TICKRATE);
   });
-  bot.on('messageCreate', async message => {
+  bot.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     messageCache.set(message.id, {
       content: message.content,
@@ -157,7 +167,7 @@ await (async function () {
     let data = null;
     const accountId = message.author.id;
     data = db.loadDataByAccountId(accountId);
-    if (data && Object.keys(data).length > 0) username = helper.loadUsernameByAccountId(accountId);
+    if (data && Object.keys(data).length > 0) username = db.loadUsernameByAccountId(accountId);
     if (!data && !['login', 'anonymous', ...(commands['login']?.aliases || []), ...(commands['anonymous']?.aliases || [])].includes(command)) {
       const embed = await commandEmbed({
         title: '❌ Not logged in',
@@ -205,6 +215,7 @@ await (async function () {
     let globalCooldownResult = null;
     try {
       cooldownResult = await helper.Cooldown(username, command);
+      log(cooldownResult)
       if (!cooldownResult) await helper.newCooldown(username, command, commands.cooldown);
       else {
         const embed = await commandEmbed({ title: `⏳ Cooldown`, description: `You must wait **${await timeLeft(cooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`, user: username, reward: false, message });
@@ -254,9 +265,9 @@ await (async function () {
         }
         return res;
       };
-      data = await db.loadData(username);
+      /*data = await db.loadData(username);
       data.command_execute = (data.command_execute || 0) + 1;
-      await db.saveData(username, data);
+      await db.saveData(username, data);*/
       try {
         await commands.execute(message, args, username, originalCommand, dependencies);
       } finally {
