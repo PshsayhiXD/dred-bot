@@ -1,26 +1,8 @@
-import { 
-  EmbedBuilder, ActionRowBuilder, 
-  ButtonBuilder, ButtonStyle, 
-  StringSelectMenuBuilder, 
-  ModalBuilder, TextInputBuilder,
-  AttachmentBuilder
-} from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, AttachmentBuilder } from 'discord.js';
 import config from '../config.js';
 import log from '../utils/logger.js';
 import { registerButtonHandlers, registerSelectHandlers, registerModalHandlers } from '../tasks/interactionCreate.js';
-export const commandEmbed = async ({ 
-  title = 'null',
-  description = 'null', 
-  color = '#2f3136', 
-  footer = null, 
-  thumbnail = config.BotAvatarURL, 
-  image = null, 
-  fields = [], 
-  user = null, 
-  message = null,
-  reward = false,
-  dep = [],
-} = {}) => {
+export const commandEmbed = async ({ title = 'null', description = 'null', color = '#2f3136', footer = null, thumbnail = config.BotAvatarURL, image = null, fields = [], user = null, message = null, reward = false, dep = [] } = {}) => {
   try {
     if (typeof color === 'string') {
       color = color.replace(/^#/, '');
@@ -168,7 +150,13 @@ export const commandReRunButton = (bot, message, command, args) => {
     bot.emit('messageCreate', newMessage);
     const reactable = !!message.react;
     const replyable = !!message.reply;
-    return reactable ? message.react('🔁') : replyable ? message.reply('Done') : null;
+    try {
+      if (reactable && !message.reactions.cache.some(r => r.emoji.name === '🔁' && r.me)) await message.react('🔁');
+      if (replyable) await message.reply('Done');
+    } catch (error) {
+      if (error.code === 10008) log(`[commandReRunButton] Original message is unknown or deleted, skipping react/reply.`, 'warn');
+      else log(`[commandReRunButton] ${error}`, 'error');
+    }
   };
   registerButtonHandlers(handlers);
   return new ButtonBuilder().setLabel('🔁 Run again').setStyle(ButtonStyle.Secondary).setCustomId(customId);
@@ -203,9 +191,9 @@ export const commandEmbedPager = async (embeds, userId) => {
 export const commandLinkButton = async (label, url, emoji = null) => {
   return await commandButtonComponent([{ label, style: ButtonStyle.Link, url, emoji }]);
 };
-export const Embed = ({ title = "Untitled", description = "No description provided.", color = "#2f3136", footer = null, thumbnail = null, timestamp = true } = {}) => {
+export const Embed = ({ title = 'Untitled', description = 'No description provided.', color = '#2f3136', footer = null, thumbnail = null, timestamp = true } = {}) => {
   const e = new EmbedBuilder().setTitle(title).setDescription(description).setColor(color);
-  if (footer) e.setFooter(typeof footer === "string" ? { text: footer } : footer);
+  if (footer) e.setFooter(typeof footer === 'string' ? { text: footer } : footer);
   if (thumbnail) e.setThumbnail(thumbnail);
   if (timestamp) e.setTimestamp();
   return e;
@@ -246,7 +234,9 @@ export const sendChunks = async (channel, content, isEmbed = true) => {
     for (let i = 0; i < chunks.length; i++) {
       try {
         if (isEmbed) {
-          const e = new EmbedBuilder().setDescription(chunks[i]).setColor('#2f3136')
+          const e = new EmbedBuilder()
+            .setDescription(chunks[i])
+            .setColor('#2f3136')
             .setTitle(i === 0 ? 'Message' : `Message (part ${i + 1})`);
           sentMsgs.push(await channel.send({ embeds: [e] }));
         } else {
@@ -259,7 +249,7 @@ export const sendChunks = async (channel, content, isEmbed = true) => {
   }
   return sentMsgs;
 };
-export const commandAttachment = async (buffer, name = "file.png", type = "image/png") => {
-  if (!buffer) throw new Error("commandAttachment: missing buffer");
+export const commandAttachment = async (buffer, name = 'file.png', type = 'image/png') => {
+  if (!buffer) throw new Error('commandAttachment: missing buffer');
   return new AttachmentBuilder(buffer, { name, contentType: type });
 };
