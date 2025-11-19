@@ -28,62 +28,10 @@ Inspired by the gameplay and community mechanics of [**drednot.io**](https://dre
 
 ## ✨ Features
 
-### 💰 Economy System
-
-- Balance management with daily/weekly rewards
-- Passive income generation
-- Bank deposits and withdrawals
-- Transfer system with configurable limits
-
-### 🎮 Commands (50+ Commands)
-
-- **Account**: Login, logout, password management, anonymous mode
-- **Clan**: Create/join clans, member management, clan settings and banners
-- **Economy**: Balance, daily/weekly rewards, give/transfer commands
-- **Gambling**: Blackjack, coinflip, dice, slots, wheel games, and extended variants
-- **Items**: Inventory management, crafting, enchanting, disassembling, reforging
-- **Marketplace**: Buy/sell items with automated tick-based system
-- **Moderation**: Admin tools, database management, bot restarts
-- **Research**: Unlockable research tree with requirements
-- **Utility**: Leaderboards, help system, weather, timezone info, and more
-
-### Advanced Features
-
-- **Multi-language Support**: Built-in language files for customization
-- **Regional Timers**: Time zone-aware timers for global communities
-- **Mission & PvP Events**: Automated timed events with notifications
-- **Ship Tracking**: Integration with external ship tracking APIs
-- **Research Tree**: Progressive unlocks with dependencies
-- **Web Dashboard**: Localhost-based admin and user interfaces
-
-## 🛠️ Dependencies Used
-
-### Core Dependencies
-
-- **Node.js** (16+): Runtime environment
-- **Discord.js** (14.22+): Discord API wrapper
-- **Express.js**: Web server framework
-- **Better SQLite3**: Database management
-- **Argon2**: Password hashing
-- **Axios**: HTTP client for API integrations
-- **Sharp**: Image processing
-- **Canvas**: Dynamic image generation
-- **WS**: WebSocket support
-- **Luxon**: Date/time handling
-- **MathJS**: Mathematical operations
-- **Cheerio**: HTML parsing
-- **Color**: Color manipulation
-- **Helmet**: Security middleware
-- **CORS**: Cross-origin resource sharing
-- **Express Rate Limit**: API rate limiting
-- **Cookie Parser**: Cookie handling
-- **Dotenv**: Environment variable management
-
-### Development Dependencies
-
-- **Nodemon**: Development auto-restart
-- **Chokidar**: Stalk your files
-- Optional: **SSL key and certificate** (for HTTPS support in the web dashboard)
+💰 Economy System
+⚔️ Items System
+🎮 Commands (50+ Commands)
+(much more!)...
 
 ## 📋 Prerequisites
 
@@ -98,8 +46,8 @@ Inspired by the gameplay and community mechanics of [**drednot.io**](https://dre
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/PshsayhiXD/dredbot.git
-cd dredbot
+git clone https://github.com/PshsayhiXD/dred-bot.git
+cd dred-bot
 ```
 
 ### 2. Install Dependencies
@@ -108,7 +56,7 @@ cd dredbot
 npm install
 ```
 
-This will install all the required dependencies listed.
+This will install all the required dependencies.
 
 And
 ```bash
@@ -127,12 +75,7 @@ cp .env.example .env
 
 #### Edit `config.js`
 
-Configure your bot settings:
-
-- Set your Discord bot token
-- Configure guild IDs, channel IDs, role IDs
-- Adjust economy settings, timers, etc.
-- Set up API keys for external services (e.g., DREDNOT_ANON_KEY)
+Configure your bot settings
 
 #### Edit `.env`
 
@@ -192,17 +135,11 @@ SSL_CERT_PATH: './cert/cert.pem'
 
 ### Full Application (Recommended)
 
-To run the complete bot with web server and validator:
+To run the complete bot:
 
 ```bash
 npm run start
 ```
-
-This runs all three components simultaneously:
-
-- Discord bot
-- Web server (localhost:3000)
-- Data validator
 
 ### Individual Components
 
@@ -218,30 +155,8 @@ npm run localhost
 npm run bot
 ```
 
-**Validator Only:**
-
-```bash
-npm run validator
-```
-
-### Development Mode
-
-For development with auto-restart on file changes:
-
-```bash
-npm run dev
-```
-
-## Accessing the Application
-
-- **Discord Bot**: The bot will automatically connect to Discord using your token
-- **Web Dashboard**: Available at `http://localhost:3000` (configurable in config.js)
-- **Admin Dashboard**: Access admin features through the web interface
-- **API Endpoints**: RESTful API available for integrations
-
 ## ⚠️ Important Notes
 
-- Ensure your CORS proxy is running if using external API integrations
 - The bot requires proper Discord permissions to function correctly
 - Database files will be created automatically on first run
 - Make sure all environment variables are properly set before starting
@@ -255,34 +170,7 @@ The `config.js` file contains all customizable settings:
 - **Bot Configuration**: Prefix, currency settings, bot permissions
 - **Economy Parameters**: Rewards, multipliers, transfer limits, taxes
 - **Server Integration**: Guild IDs, channel IDs, role IDs for Discord server
-
-### Advanced Settings
-
-- **Timer Intervals**: Regional timers, mission timers, marketplace ticks
-- **Event Settings**: PvP events, mission configurations
-- **Item System**: Rarities, crafting recipes, enchantment costs
-- **API Integrations**: External service keys and endpoints
-
-### Example Configuration Areas
-
-```javascript
-// Basic bot settings
-PREFIX: 'd?',
-CURRENCY_NAME: "dredcoin",
-CURRENCY_SYMBOL: "⚡",
-
-// Economy settings
-DAILY_REWARD: 250,
-WEEKLY_REWARD: 2000,
-PASSIVE_INCOME: { BASE_PER_MINUTE: 1000 },
-
-// Server integration
-GUILD_ID: 'your_guild_id',
-BotcommandChannelID: 'your_channel_id',
-
-// API keys
-DREDNOT_ANON_KEY: 'your_anon_key',
-```
+- ... more
 
 Refer to `config.example.js` for detailed comments on each option.
 
@@ -324,8 +212,8 @@ We welcome contributions from the community! This is an open-source project and 
 1. **Fork the Repository**
 
    ```bash
-   git clone https://github.com/PshsayhiXD/dredbot.git
-   cd dredbot
+   git clone https://github.com/PshsayhiXD/dred-bot.git
+   cd dred-bot
    ```
 
 2. **Create a Feature Branch**
@@ -340,13 +228,7 @@ We welcome contributions from the community! This is an open-source project and 
    - Add tests for new features
    - Update documentation as needed
 
-4. **Test Thoroughly**
-
-   - Run the validator: `npm run validator`
-   - Test bot commands in a development server
-   - Verify web dashboard functionality
-
-5. **Submit a Pull Request**
+4. **Submit a Pull Request**
    - Provide a clear description of your changes
    - Reference any related issues
    - Ensure all tests pass
