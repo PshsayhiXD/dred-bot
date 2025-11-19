@@ -4,7 +4,7 @@ import express from "express";
 import helmet from "helmet";
 import axios from "axios";
 import paths from "./../utils/path.js";
-import { helper } from "../utils/helper.js";
+import { readEnv } from "../utils/db.js";
 
 const ipCache = new Map();
 const TTL = 3600 * 1000;
@@ -28,7 +28,7 @@ setInterval(() => {
 const checkVPN = async (ip) => {
   const cached = getCache(ip);
   if (cached !== null) return cached;
-  const Key = await helper.readEnv("PROXYCHECKIO_API_KEY");
+  const Key = await readEnv("PROXYCHECKIO_API_KEY");
   try {
     const { data } = await axios.get(`https://proxycheck.io/v2/${ip}`, {
       params: { key: Key, vpn: 1, risk: 1 }

@@ -3,7 +3,7 @@ import paths from '../utils/path.js';
 import helmet from 'helmet';
 import cors from 'cors';
 import { helper }  from '../utils/helper.js';
-
+import { readEnv } from '../utils/db.js';
 const corsOptions = {
   origin: '*',
   allowedHeaders: ['x-api-key', 'Content-Type'],
@@ -24,7 +24,7 @@ export const Middleware = async (app) => {
       (req.connection?.remoteAddress && 
       localIps.includes(req.connection.remoteAddress))
     ) return next();
-    if (req.headers['x-api-key'] !== (await helper.readEnv('HTTP_ACCESS_TOKEN'))) {
+    if (req.headers['x-api-key'] !== (await readEnv('HTTP_ACCESS_TOKEN'))) {
       helper.log(`Unauthorized access attempt detected. ip: ${req.ip}, headers: ${req.headers}`);
       return res.status(403).send('[403] Forbidden.');
     }
