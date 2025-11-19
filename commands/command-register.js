@@ -22,7 +22,7 @@ export default async function registerPrefixCommands(bot, selected = 'all') {
     try {
       const fileUrl = pathToFileURL(filePath).href;
       delete (await import.meta.resolve(fileUrl));
-      const { default: command } = await import(fileUrl);
+      const { default: command } = await import(`${fileUrl}?v=${Date.now()}`);
       if (!command?.name || typeof command.execute !== 'function') {
         log(`[${thisFile(import.meta.url)}] Skipping invalid prefix command: ${filePath}`, 'warn');
         continue;
