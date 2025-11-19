@@ -4,7 +4,7 @@ export default {
   description: '',
   icon: 'default.png',
   maxLevel: 1,
-  requires: [],
+  require: [],
   cost: (level) => 100,
   duration: (level) => 60,
   dependencies: ``,
