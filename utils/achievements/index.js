@@ -5,6 +5,13 @@ import log from '../logger.js';
 
 export const achievements = {};
 
+export const setAchievement = async (key, data) => {
+  if (!key || typeof data !== "object") throw new Error(`[setAchievement] Invalid key or data`);
+  if (achievements[key]) delete achievements[key];
+  createAchievement(key, data);
+  return { achievement: achievements[key] };
+};
+
 export const createAchievement = (key, data) => {
   if (!key || typeof data !== 'object') throw new Error(`[createAchievement] Invalid key or data`)
   const {

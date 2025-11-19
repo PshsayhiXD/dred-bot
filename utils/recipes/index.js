@@ -5,6 +5,13 @@ import log from "../logger.js";
 
 export const recipes = {};
 
+export const setRecipe = async (name, data) => {
+  if (!name || typeof data !== "object") throw new Error(`[setRecipe] Invalid name or data`);
+  if (recipes[name]) delete recipes[name];
+  createRecipe(name, data);
+  return { recipe: recipes[name] };
+}
+
 export const createRecipe = (name, data) => {
   if (!name || typeof data !== "object" || !data.need || !data.to) throw new Error(`[-] createRecipe: Invalid or missing definition for '${id}'.`);
   const parts = name.split(".");

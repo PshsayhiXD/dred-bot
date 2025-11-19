@@ -5,6 +5,13 @@ import log from '../logger.js';
 
 export const skills = {};
 
+export const setSkill = async (name, data) => {
+  if (!name || typeof data !== 'object') throw new Error(`[setSkill] Invalid name or data`);
+  if (skills[name]) delete skills[name];
+  createSkill(name, data, data.apply);
+  return { skill: skills[name] };
+}
+
 export const createSkill = (name, options = {}, apply) => {
   if (!name) throw new Error(`[-] createSkill: Missing name.`);
   skills[name] = {

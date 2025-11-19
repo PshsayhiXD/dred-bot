@@ -5,6 +5,13 @@ import log from '../logger.js';
 
 export const ranks = {};
 
+export const setRank = async (name, data) => {
+  if (!name || typeof data !== 'object') throw new Error(`[setRank] Invalid name or data`);
+  if (ranks[name]) delete ranks[name];
+  createRank(name, data);
+  return { rank: ranks[name] };
+}
+
 export const createRank = (name, options = {}) => {
   if (!name) throw new Error(`[-] createRank: Missing name`);
   ranks[name] = {

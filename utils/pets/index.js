@@ -5,6 +5,13 @@ import log from "../logger.js";
 
 export const pets = {};
 
+export const setPet = async (name, data) => {
+  if (!name || typeof data !== "object") throw new Error(`[setPet] Invalid name or data`);
+  if (pets[name]) delete pets[name];
+  createPet(name, data, data.execute);
+  return { pet: pets[name] };
+}
+
 export const createPet = (name, options = {}, execute) => {
   if (!name || typeof execute !== "function") throw new Error(`[-] createPet: Missing ID or execute function for ${id}`);
   pets[name] = {

@@ -5,6 +5,13 @@ import log from "../logger.js";
 
 export const jobs = {};
 
+export const setJob = async (name, data) => {
+  if (!name || typeof data !== "object") throw new Error(`[setJob] Invalid name or data`);
+  if (jobs[name]) delete jobs[name];
+  createJob(name, data, data.execute);
+  return { job: jobs[name] };
+}
+
 export const createJob = (name, options = {}, work) => {
   if (!name || typeof work !== "function") throw new Error(`[-] createJob: Missing ID or work function for ${id}`);
   jobs[name] = { 

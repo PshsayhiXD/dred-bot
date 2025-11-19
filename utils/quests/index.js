@@ -5,6 +5,13 @@ import log from '../logger.js';
 
 export const quests = {};
 
+export const setQuest = async (key, data) => {
+  if (!key || typeof data !== 'object') throw new Error(`[setQuest] Invalid key or data`);
+  if (quests[key]) delete quests[key];
+  createQuest(key, data);
+  return { quest: quests[key] };
+}
+
 export const createQuest = (key, data) => {
   if (!key || typeof data !== 'object') throw new Error(`[createQuest] Invalid key or data`);
   const {

@@ -5,6 +5,13 @@ import log from "../logger.js";
 
 export const enchants = {};
 
+export const setEnchant = async (id, data) => {
+  if (!id || typeof data !== "object") throw new Error(`[setEnchant] Invalid ID or data`);
+  if (enchants[id]) delete enchants[id];
+  createEnchant(id, data, data.execute);
+  return { enchant: enchants[id] };
+}
+
 export const createEnchant = (id, options = {}, execute) => {
   if (!id || typeof execute !== "function") throw new Error(`[-] createEnchant: Missing ID or execute function for ${id}`);
   enchants[id] = {

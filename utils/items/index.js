@@ -2,7 +2,15 @@ import { readdir } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import log from '../logger.js';
+
 export const items = {};
+
+export const setItem = async (name, data) => {
+  if (!name || typeof data !== 'object') throw new Error(`[setItem] Invalid name or data`);
+  if (items[name]) delete items[name];
+  createItem(name, data, data.execute);
+  return { item: items[name] };
+}
 
 export const createItem = (name, options = {}, execute) => {
   if (!name || typeof execute !== 'function') throw new Error(`[-] createItem: Missing ID or execute function for ${id}`);

@@ -5,6 +5,13 @@ import log from '../logger.js';
 
 export const researchs = {};
 
+export const setResearch = async (name, data) => {
+  if (!name || typeof data !== 'object') throw new Error(`[setResearch] Invalid name or data`);
+  if (researchs[name]) delete researchs[name];
+  createResearch(name, data);
+  return { research: researchs[name] };
+}
+
 export const createResearch = (name, options = {}) => {
   if (!name) throw new Error(`[-] createResearch: Missing ID`);
   researchs[name] = {
