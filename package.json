@@ -4,11 +4,11 @@
   "type": "module",
   "main": "localhost.js",
   "scripts": {
-    "localhost": "node localhost.js",
-    "bot": "node bot.js",
-    "validator": "node utils/validator.js",
-    "start": "node localhost.js & node bot.js & node utils/validator.js",
-    "setup": "node utils/createFile.js",
+    "localhost": "node src/localhost.js",
+    "bot": "node src/bot.js",
+    "validator": "node src/utils/validator.js",
+    "start": "node src/localhost.js & node src/bot.js & node src/modules/validator.js",
+    "setup": "node src/utils/createFile.js",
     "dev": "nodemon localhost.js"
   },
   "dependencies": {

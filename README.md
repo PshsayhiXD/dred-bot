@@ -28,10 +28,10 @@ Inspired by the gameplay and community mechanics of [**drednot.io**](https://dre
 
 ## ✨ Features
 
-💰 Economy System
-⚔️ Items System
-🎮 Commands (50+ Commands)
-(much more!)...
+- 💰 Economy System
+- ⚔️ Items System
+- 🎮 Commands (50+ Commands)
+- (much more!)...
 
 ## 📋 Prerequisites
 
@@ -91,7 +91,7 @@ RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key_here
 
 Make sure to set all the variables.
 
-### 4. Set Up CORS Proxy (Optinal)
+### 4. Set Up CORS Proxy (Optional)
 
 Since the bot integrates with external APIs (like drednot.io), you'll need to handle CORS restrictions when running on localhost. You have several options:
 
