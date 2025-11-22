@@ -1,4 +1,3 @@
-import { ButtonStyle } from 'discord.js';
 import path from 'path';
 
 export default {

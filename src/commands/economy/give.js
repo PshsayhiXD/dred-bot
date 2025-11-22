@@ -10,23 +10,17 @@ export default {
   id: 12,
   dependencies: `commandEmbed transferDredcoin formatAmount config parseBet 
                  commandButtonComponent commandModal withdrawDredcoin depositDredcoin 
-                 getDredcoin`,
+                 getDredcoin isValidUser`,
   execute: async (message, args, user, command, dep) => {
     const wallet = await dep.getDredcoin(user);
     const parsed = await dep.parseBet(args[1], wallet);
     if (parsed.err || parsed.bet <= 0) return message.react("❌");
-    let target = message.mentions.users.first();
-    if (!target && args[0]) {
-      const search = args[0].toLowerCase();
-      target = message.guild.members.cache.find(m =>
-        m.user.username.toLowerCase() === search ||
-        m.user.tag.toLowerCase() === search
-      )?.user;
-    }
+    let target = args[0];
     if (!target) return message.react("❔");
     if (target === user) return message.react("⚠");
-    if (target.bot) return message.react("⁉");
+    if (!(await dep.isValidUser(target))) return message.react("❔");
     const result = await dep.transferDredcoin(user, target, parsed.bet);
+    if (result && !result.ok) return;
     const embed = await dep.commandEmbed({
       title: `${dep.config.PREFIX}${command}`,
       description:

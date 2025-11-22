@@ -26,7 +26,7 @@ export default {
     const embed = await dep.commandEmbed({
       title: `${dep.config.PREFIX}${command}`,
       description:
-        `🎁 You claimed **\`${await dep.formatAmount(result.dredcoin)}${dep.config.CURRENCY_SYMBOL}\`** and **\`${result.earnedExp || 0}\`** XP ` +
+        `🎁 You claimed **\`${await dep.formatAmount(result.dredcoin)}${dep.config.CURRENCY_SYMBOL}\`** and **\`${result.exp || 0}\`** XP ` +
         `for **${result.minutes}** minute(s) (**${result.seconds}**s) of passive time.\n` +
         `Prestige Bonus: **x${1 + result.prestige * dep.config.PASSIVE_INCOME.MULTIPLIER_PER_PRESTIGE}**\n` +
         `Dredcoin Multipler: **${result.multiplier}x**`,
