@@ -13,7 +13,8 @@ const files = [
   "database/version.json",
   "database/scrape.do.json",
   "database/deleteScheduler.json",
-  "database/motd_backup.json"
+  "database/motd_backup.json",
+  "database/shop.db"
 ];
 const renameTasks = [
   { from: ".env.example", to: ".env" },
