@@ -30,7 +30,7 @@ Inspired by the gameplay and community mechanics of [**drednot.io**](https://dre
 
 - 💰 Economy System
 - ⚔️ Items System
-- 🎮 Commands (50+ Commands)
+- 🎮 Commands (70+ Commands)
 - (much more!)...
 
 ## 📋 Prerequisites
@@ -39,7 +39,6 @@ Inspired by the gameplay and community mechanics of [**drednot.io**](https://dre
 - **npm** (comes with Node.js)
 - **SSL key and certificate** (optional, required for HTTPS support in the web dashboard)  
 - **A Discord bot token** - Obtain from [Discord Developer Portal](https://discord.com/developers/applications)
-- **CORS Anywhere** or similar proxy for API integrations (if fetching from external services to localhost)
 
 ## 🚀 Installation
 
@@ -120,17 +119,6 @@ Since the bot integrates with external APIs (like drednot.io), you'll need to ha
 
 You can use online CORS proxies or set up your own reverse proxy.
 
-#### Option C: Use HTTPS with SSL key and certificate
-
-Place your SSL key and certificate in the cert/ folder.
-
-Update config.js to point to your files for HTTPS support:
-
-```javascript
-SSL_KEY_PATH: './cert/key.pem',
-SSL_CERT_PATH: './cert/cert.pem'
-```
-
 ## ▶️ Running the Application
 
 ### Full Application (Recommended)
@@ -164,8 +152,6 @@ npm run bot
 ## 🔧 Configuration
 
 The `config.js` file contains all customizable settings:
-
-### Core Settings
 
 - **Bot Configuration**: Prefix, currency settings, bot permissions
 - **Economy Parameters**: Rewards, multipliers, transfer limits, taxes
@@ -227,6 +213,7 @@ We welcome contributions from the community! This is an open-source project and 
    - Follow the existing code style
    - Add tests for new features
    - Update documentation as needed
+   - Include JSDoc for better understanding
 
 4. **Submit a Pull Request**
    - Provide a clear description of your changes
