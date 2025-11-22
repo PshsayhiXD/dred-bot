@@ -1,7 +1,8 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, AttachmentBuilder } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, AttachmentBuilder } from 'discord.js';
 import config from '../config.js';
 import log from '../utils/logger.js';
-import { registerButtonHandlers, registerSelectHandlers, registerModalHandlers } from '../events/interactionCreate.js';
+import { getUserStock, getGlobalStock, getNextGlobalRestock } from "./shop.js"; 
+import { registerButtonHandlers, unregisterButtonHandler, registerSelectHandlers, unregisterSelectHandler, registerModalHandlers, unregisterModalHandler } from '../events/interactionCreate.js';
 export const commandEmbed = async ({ title = 'null', description = 'null', color = '#2f3136', footer = null, thumbnail = config.BotAvatarURL, image = null, fields = [], user = null, message = null, reward = false, dep = [] } = {}) => {
   try {
     if (typeof color === 'string') {
@@ -135,6 +136,49 @@ export const commandModal = async (modalDef = {}) => {
   registerModalHandlers({ [modalId]: onSubmit });
   return modal;
 };
+export const commandConfirmationButton = async (bot, message, prompt = 'Are you sure?', timeout = 60000) => {
+  if (!bot || !message) return null;
+  const customIdYes = `confirm_yes_${crypto.randomUUID()}`;
+  const customIdNo = `confirm_no_${crypto.randomUUID()}`;
+  const handlers = {};
+  handlers[customIdYes] = async interaction => {
+    if (interaction.user.id !== message.author.id) return;
+    await interaction.update({ content: 'Confirmed ✅', components: [] });
+    interaction.client.emit('commandConfirmation', true, interaction);
+  };
+  handlers[customIdNo] = async interaction => {
+    if (interaction.user.id !== message.author.id) return;
+    await interaction.update({ content: 'Cancelled ❌', components: [] });
+    interaction.client.emit('commandConfirmation', false, interaction);
+  };
+  registerButtonHandlers(handlers);
+  const row = await commandButtonComponent([
+    {
+      label: 'Yes',
+      emoji: '✅',
+      style: 3,
+      customId: customIdYes,
+    },
+    {
+      label: 'No',
+      emoji: '❌',
+      style: 4,
+      customId: customIdNo,
+    },
+  ]);
+  setTimeout(async () => {
+    try {
+      const msg = await message.fetch();
+      if (msg.components.length > 0) {
+        await msg.edit({ content: 'Confirmation timed out ⏲️', components: [] });
+        return unregisterButtonHandlers([customIdYes, customIdNo]);
+      }
+    } catch (error) {
+      log(`[commandConfirmationButton] Timeout edit failed: ${error}`, 'error');
+    }
+  }, timeout);
+  return row;
+};
 export const commandReRunButton = (bot, message, command, args) => {
   if (!bot || !message || !command) return null;
   const customId = `run_${crypto.randomUUID()}`;
@@ -151,8 +195,8 @@ export const commandReRunButton = (bot, message, command, args) => {
     const reactable = !!message.react;
     const replyable = !!message.reply;
     try {
-      if (reactable && !message.reactions.cache.some(r => r.emoji.name === '🔁' && r.me)) await message.react('🔁');
-      if (replyable) await message.reply('Done');
+      if (reactable && !message.reactions.cache.some(r => r.emoji.name === '🔁' && r.me)) return await message.react('🔁');
+      else if (replyable) return await message.reply('Done');
     } catch (error) {
       if (error.code === 10008) log(`[commandReRunButton] Original message is unknown or deleted, skipping react/reply.`, 'warn');
       else log(`[commandReRunButton] ${error}`, 'error');
@@ -161,31 +205,41 @@ export const commandReRunButton = (bot, message, command, args) => {
   registerButtonHandlers(handlers);
   return new ButtonBuilder().setLabel('🔁 Run again').setStyle(ButtonStyle.Secondary).setCustomId(customId);
 };
-export const commandEmbedPager = async (embeds, userId) => {
+export const commandEmbedPager = async (embeds, userId, pageFormat = 'Page {current}/{max}') => {
   let i = 0;
-  const build = async () => ({
-    embeds: [embeds[i]],
-    components: await commandButtonComponent([
-      {
-        label: '⬅️ Prev',
-        style: 2,
-        onClick: async int => {
-          if (int.user.id !== userId) return;
-          i = (i - 1 + embeds.length) % embeds.length;
-          await int.update(await build());
+  const build = async () => {
+    return {
+      embeds: [embedWithPage],
+      components: await commandButtonComponent([
+        {
+          label: '⬅️ Prev',
+          style: 2,
+          customId: `page_prev_${crypto.randomUUID()}`,
+          onClick: async int => {
+            if (int.user.id !== userId) return;
+            i = (i - 1 + embeds.length) % embeds.length;
+            await int.update(await build());
+          },
         },
-      },
-      {
-        label: '➡️ Next',
-        style: 2,
-        onClick: async int => {
-          if (int.user.id !== userId) return;
-          i = (i + 1) % embeds.length;
-          await int.update(await build());
+        {
+          label: `Page ${i + 1} / ${embeds.length}`,
+          style: 1,
+          customId: `page_info_${crypto.randomUUID()}`,
+          disabled: true,
         },
-      },
-    ]),
-  });
+        {
+          label: '➡️ Next',
+          style: 2,
+          customId: `page_next_${crypto.randomUUID()}`,
+          onClick: async int => {
+            if (int.user.id !== userId) return;
+            i = (i + 1) % embeds.length;
+            await int.update(await build());
+          },
+        },
+      ]),
+    };
+  };
   return await build();
 };
 export const commandLinkButton = async (label, url, emoji = null) => {
@@ -252,4 +306,262 @@ export const sendChunks = async (channel, content, isEmbed = true) => {
 export const commandAttachment = async (buffer, name = 'file.png', type = 'image/png') => {
   if (!buffer) throw new Error('commandAttachment: missing buffer');
   return new AttachmentBuilder(buffer, { name, contentType: type });
+};
+export const commandShopComponent = async ({
+  title = "Shop",
+  info = "",
+  color = "#2f3136",
+  items = [],
+  perPage = 5,
+  userId = null,
+  user = null,
+  bot = null,
+  message = null,
+  globalOptions = {
+    autoRestock: true,
+    defaultRestockTime: 300000,
+    notificationsEnabled: true,
+    globalLimit: { enabled: false, daily: 0, weekly: 0, monthly: 0, yearly: 0 },
+  },
+} = {}) => {
+  if (!userId || !user || !message) throw new Error("commandShopComponent: userId, user, bot, and message are required");
+  let mode = "shop";
+  let currentPage = 0;
+  const cart = {};
+  let selectedItem = null;
+  let notification = "";
+  const totalPages = Math.ceil(items.length / perPage);
+  const getPagedItems = () => items.slice(currentPage * perPage, currentPage * perPage + perPage);
+  const applyDiscount = (item, priceObj) => {
+    const sale = item.options?.sales?.item;
+    if (sale?.active && (!sale.startTime || Date.now() >= sale.startTime) && (!sale.endTime || Date.now() <= sale.endTime)) {
+      const discounted = {};
+      for (const cur in priceObj) discounted[cur] = Math.floor(priceObj[cur] * (1 - sale.discount / 100));
+      return discounted;
+    }
+    return priceObj;
+  };
+  const canBuy = async (item, qty) => {
+    const userQty = await getUserStock(userId, item.id);
+    const globalQty = await getGlobalStock(item.id);
+    if (item.options?.stock?.userStock?.enabled && userQty < qty) return [false, `You don't have enough personal stock for ${item.name}.`];
+    if (item.options?.stock?.globalStock?.enabled && globalQty < qty) return [false, `Not enough global stock for ${item.name}.`];
+    return [true];
+  };
+  const build = async () => {
+    const embed = new EmbedBuilder()
+      .setTitle(mode === "shop" ? `${title} Shop` : "Cart")
+      .setThumbnail(config.BotAvatarURL)
+      .setColor(color)
+      .setFooter({ text: mode === "shop" ? `Page ${currentPage + 1}/${totalPages} • User: ${user}` : `User: ${user}`, iconURL: config.BotAvatarURL });
+    let description = "";
+    if (mode === "shop") {
+      description = `**Info:** ${info}\nNext restock ${getNextGlobalRestock()}\n<----------------->`;
+      for (const item of getPagedItems()) {
+        if (item.options?.ui?.showInShop === false) continue;
+        let priceObj = typeof item.price === "function" ? await item.price() : item.price || {};
+        priceObj = applyDiscount(item, priceObj);
+        const priceStr = Object.entries(priceObj).map(([cur, amt]) => `${amt} ${cur}`).join(", ");
+        const userQty = await getUserStock(userId, item.id);
+        const globalQty = await getGlobalStock(item.id);
+        const stockStr = `Stock: Global: ${globalQty ?? "∞"} | Yours: ${userQty ?? "∞"}`;
+        description += `\n**\`${item.name} ${item.emoji || ""}\`** - \`${priceStr}\` - \`${item.desc}\` - ${stockStr}`;
+      }
+      description += "<----------------->\n";
+    } else {
+      description = "🛒 **Current cart items:**\n";
+      for (const [name, qty] of Object.entries(cart)) {
+        const item = items.find(i => i.name === name);
+        if (item.options?.ui?.showInCart === false) continue;
+        description += `- \`${name} ${item?.emoji || ""}\` x \`${qty}\`\n`;
+      }
+    }
+    if (notification.length && globalOptions.notificationsEnabled) description += `\n📃 **Notifications:**\n${notification}`;
+    embed.setDescription(description);
+    const components = [];
+    if (mode === "shop") {
+      const prevBtn = {
+        label: "⬅️ Prev",
+        style: 2,
+        customId: `shop_prev_${crypto.randomUUID()}`,
+        onClick: async int => {
+          if (int.user.id !== userId) return;
+          currentPage = (currentPage - 1 + totalPages) % totalPages;
+          await int.update(await build());
+        },
+      };
+      const pageBtn = { label: `Page ${currentPage + 1} / ${totalPages}`, style: 2, customId: `shop_page_${crypto.randomUUID()}`, disabled: true };
+      const nextBtn = {
+        label: "➡️ Next",
+        style: 2,
+        customId: `shop_next_${crypto.randomUUID()}`,
+        onClick: async int => {
+          if (int.user.id !== userId) return;
+          currentPage = (currentPage + 1) % totalPages;
+          await int.update(await build());
+        },
+      };
+      const paginationRows = await commandButtonComponent([prevBtn, pageBtn, nextBtn]);
+      if (paginationRows.length) components.push(...paginationRows);
+      const selectOptions = getPagedItems()
+        .filter(i => i.options?.ui?.showInShop !== false)
+        .map(item => ({ label: item.name.slice(0, 100), value: item.name, description: item.desc.slice(0, 100), emoji: item.emoji }));
+      const selectRows = await commandSelectComponent({
+        placeholder: "Select an item",
+        options: selectOptions,
+        onSelect: async int => {
+          if (int.user.id !== userId) return;
+          selectedItem = int.values[0];
+          await int.update(await build());
+        },
+      });
+      if (selectRows.length) components.push(...selectRows);
+      if (selectedItem) {
+        const item = items.find(i => i.name === selectedItem);
+        const buyBtns = [];
+        if (item.options?.features?.allowBulkBuy !== false && item.options?.ui?.showBuyButtons !== false) {
+          const createBuyBtn = (label, qty, emoji) => ({
+            label,
+            emoji,
+            style: 1,
+            customId: `shop_buy${qty}_${crypto.randomUUID()}`,
+            onClick: async int => {
+              if (int.user.id !== userId) return;
+              const [ok, msg] = await canBuy(item, qty);
+              if (!ok) {
+                notification += `\n❌ ${msg}`;
+                await int.update(await build());
+                return;
+              }
+              cart[selectedItem] = (cart[selectedItem] || 0) + qty;
+              notification += `\n- **Added** \`${qty} x ${selectedItem}\` to cart.`;
+              await int.update(await build());
+            },
+          });
+          buyBtns.push(createBuyBtn("Buy 1", 1, "1️⃣"));
+          buyBtns.push(createBuyBtn("Buy 5", 5, "5️⃣"));
+          buyBtns.push(createBuyBtn("Buy 10", 10, "🔟"));
+        }
+        if (item.options?.features?.allowCustomQty && item.options?.ui?.showBuyButtons !== false) {
+          const customBtn = {
+            label: "Custom Quantity",
+            emoji: "✏️",
+            style: 2,
+            customId: `shop_custom_${crypto.randomUUID()}`,
+            onClick: async int => {
+              if (int.user.id !== userId) return;
+              const modal = await commandModal({
+                title: "Custom Quantity",
+                customId: `shop_modal_${crypto.randomUUID()}`,
+                inputs: [{ customId: "quantity", label: "Quantity", style: TextInputStyle.Short, required: true, minLength: 1, maxLength: 10, placeholder: "Enter quantity" }],
+                onSubmit: async int2 => {
+                  if (int2.user.id !== userId) return;
+                  const qty = parseInt(int2.fields.getTextInputValue("quantity"));
+                  if (isNaN(qty) || qty < 1) {
+                    notification += "\n❌ Invalid quantity.";
+                    await int2.update(await build());
+                    return;
+                  }
+                  const [ok, msg] = await canBuy(item, qty);
+                  if (!ok) {
+                    notification += `\n❌ ${msg}`;
+                    await int2.update(await build());
+                    return;
+                  }
+                  cart[selectedItem] = (cart[selectedItem] || 0) + qty;
+                  notification += `\n- **Added** \`${qty} x ${selectedItem}\` to cart.`;
+                  await int2.update(await build());
+                },
+              });
+              await int.showModal(modal);
+            },
+          };
+          buyBtns.push(customBtn);
+        }
+        const viewCartBtn = { label: "View Cart", emoji: "🛍️", style: 2, customId: `shop_viewcart_${crypto.randomUUID()}`, onClick: async int => { if (int.user.id !== userId) return; mode = "cart"; await int.update(await build()); } };
+        buyBtns.push(viewCartBtn);
+        const buyRows = await commandButtonComponent(buyBtns);
+        if (buyRows.length) components.push(...buyRows);
+      }
+    } else {
+      const checkoutBtn = {
+        label: 'Checkout',
+        emoji: '✅',
+        style: ButtonStyle.Success,
+        customId: `cart_checkout_${crypto.randomUUID()}`,
+        onClick: async int => {
+          if (int.user.id !== userId) return;
+          if (!Object.keys(cart).length) {
+            notification += '\n❔ Cart is empty.';
+            await int.update(await build());
+            return;
+          }
+          const cartItemsStr = Object.entries(cart)
+            .map(([name, qty]) => {
+              const item = items.find(i => i.name === name);
+              return `- ${name} ${item?.emoji || ''} x ${qty}`;
+            })
+            .join('\n');
+          const confirmEmbed = new EmbedBuilder()
+            .setTitle('Confirm Purchase 🛒')
+            .setDescription(`You are about to purchase:\n${cartItemsStr}\n**⚠️ NOTE:** This action is irreversible.`)
+            .setFooter({ text: `User: ${user}` });
+          const confirmRow = await commandConfirmationButton(bot, message, 'Confirm purchase?', 60000);
+          await message.edit({ embeds: [confirmEmbed], components: [confirmRow] });
+          bot.once('commandConfirmation', async (confirmed, int2) => {
+            if (confirmed) {
+              for (const [name, qty] of Object.entries(cart)) {
+                const item = items.find(i => i.name === name);
+                const [ok, msg] = await canBuy(name, userId, qty);
+                if (!ok) {
+                  notification += `\n❌ ${msg}`;
+                  continue;
+                }
+                if (item.onBuy) {
+                  const success = await item.onBuy({ userId, qty });
+                  if (success) {
+                    if (item.options?.stock?.enabled) item.options.stock.quantity -= qty;
+                    notification += `\n- Purchased ${qty} x ${name}.`;
+                  } else notification += `\n❌ Failed to purchase ${qty} x ${name}.`;
+                }
+              }
+              Object.keys(cart).forEach(k => delete cart[k]);
+            } else if (confirmed === false) notification += '\n❌ Purchase cancelled.';
+            else notification += '\n⌛ Purchase timed out.';
+            mode = 'shop';
+            await message.edit(await build());
+          });
+        },
+      };
+      const cancelCartBtn = {
+        label: 'Cancel Cart',
+        emoji: '❌',
+        style: ButtonStyle.Danger,
+        customId: `cart_cancel_${crypto.randomUUID()}`,
+        onClick: async int => {
+          if (int.user.id !== userId) return;
+          if (!Object.keys(cart).length) return;
+          Object.keys(cart).forEach(k => delete cart[k]);
+          notification += '\n❌ Cart cancelled.';
+          mode = 'shop';
+          await int.update(await build());
+        },
+      };
+      const backBtn = {
+        label: 'Back to Shop',
+        emoji: '⬅️',
+        style: ButtonStyle.Secondary,
+        customId: `cart_back_${crypto.randomUUID()}`,
+        onClick: async int => {
+          if (int.user.id !== userId) return;
+          mode = 'shop';
+          await int.update(await build());
+        },
+      };
+      const cartRows = await commandButtonComponent([checkoutBtn, cancelCartBtn, backBtn]);
+      if (cartRows.length) components.push(...cartRows);
+    }
+    return { embeds: [embed], components };
+  };
+  return await build();
 };
