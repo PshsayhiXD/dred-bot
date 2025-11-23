@@ -49,12 +49,6 @@ import * as createRoute from './routes/app/index.js';
 import { checkMissingArgs, checkMissingPermission } from './commands/usage.js';
 import { commandEmbed, commandReRunButton } from './utils/commandComponent.js';
 
-process.on('unhandledRejection', err => {
-  console.error('Unhandled Rejection:', err);
-});
-process.on('uncaughtException', err => {
-  console.error('Uncaught Exception:', err);
-});
 await (async function () {
   const allRoutes = [],
     mounted = new Map(),
@@ -216,7 +210,6 @@ await (async function () {
     let globalCooldownResult = null;
     try {
       cooldownResult = await helper.Cooldown(username, command);
-      log(cooldownResult)
       if (!cooldownResult) await helper.newCooldown(username, command, commands.cooldown);
       else {
         const embed = await commandEmbed({ title: `⏳ Cooldown`, description: `You must wait **${await timeLeft(cooldownResult.remaining)}** before using \`${config.PREFIX}${command}\` again.`, user: username, reward: false, message });
@@ -253,7 +246,15 @@ await (async function () {
       await helper.deleteAllExpiredBoosts(username);
       const originalReply = message.reply.bind(message);
       message.reply = async (...replyArgs) => {
-        const res = await originalReply(...replyArgs);
+        let res;
+        try { res = await originalReply(...replyArgs);
+        } catch {
+          try { res = await message.channel.send(...replyArgs);
+          } catch (err) {
+            log(`[message.reply.monkeypatch] failed to send fallback: ${err.message}`, 'warn');
+            return null;
+          }
+        }
         try {
           const rerunBtn = commandReRunButton(bot, message, command, args);
           if (rerunBtn) {
@@ -266,11 +267,10 @@ await (async function () {
         }
         return res;
       };
-      /*data = await db.loadData(username);
+      data = await db.loadData(username);
       data.command_execute = (data.command_execute || 0) + 1;
-      await db.saveData(username, data);*/
-      try {
-        await commands.execute(message, args, username, originalCommand, dependencies);
+      await db.saveData(username, data);
+      try { await commands.execute(message, args, username, originalCommand, dependencies);
       } finally {
         message.reply = originalReply;
       }
@@ -280,10 +280,15 @@ await (async function () {
       const refund = (commands.category === 'gambling' || commands.category === 'economy') && typeof args[0] === 'string' ? (await parse(args[0])).bet || 0 : 0;
       log(`[-] refunded ${username} ${refund}.`);
       await helper.addDredcoin(username, refund);
-      await message.reply({
-        content:
-          `❌ **Error while executing \`${command}\`:**\n` + `\`\`\`${error.message}\`\`\`\n` + `> Please report this to a developer.\n` + (refund > 0 ? `💸 You have been refunded **\`${await helper.formatAmount(refund)}${config.CURRENCY_SYMBOL}\`**.` : ''),
-      });
+      try {
+        await message.channel.send({ content: `❌ **Error while executing \`${command}\`:**\n` +
+            `\`\`\`${error.message}\`\`\`\n` +
+            `> Please report this to a developer.\n` +
+            (refund > 0 ? `💸 You have been refunded **\`${await helper.formatAmount(refund)}${config.CURRENCY_SYMBOL}\`**.` : ''),
+        });
+      } catch (err) {
+        log(`[message.reply.error] failed to send fallback: ${err.message}`, 'warn');
+      }
     }
   });
   bot.on('messageUpdate', async (_old, msg) => {
